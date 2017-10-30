@@ -6,44 +6,56 @@ from torchvision import transforms
 import torch.nn as nn
 import torch.optim as optim
 from torch.autograd import Variable
-
+import numpy
+from PIL import Image
+import pandas as pd
+from sklearn.model_selection import train_test_split
 
 class GenderDataset(Dataset):
 
-    def __init__(self,csv_path,dtype,mode):
-        train_data = pd.read_csv(csv_path)
+    def __init__(self,csv_path,file_name,dtype,mode):
+        train_data = pd.read_csv(csv_path+file_name)
         self.dtype = dtype
         self.mode=mode
+        self.csv_path=csv_path
         if(mode=="train" or mode=="val"):
-            labels=np.ravel(train_data.ix[:,0:1])
-            pixels=train_data.ix[:,1:]
-            pixels_train, pixels_test, labels_train, labels_test = train_test_split(pixels, labels, random_state=0,train_size=0.9)
-            self.N=pixels_train.shape[0]
-            self.V=pixels_test.shape[0]
-            self.pixels_train=np.array(pixels_train).reshape([self.N,1,28,28])
+            labels=train_data.ix[:,5:6]
+            img_names=train_data.ix[:,0:1]
+            img_names_train, img_names_val, labels_train, labels_val = train_test_split(img_names, labels, random_state=0,train_size=0.7,test_size=0.3)
+            self.N=img_names_train.shape[0]
+            self.V=img_names_val.shape[0]
+            self.img_names_train=np.array(img_names_train).reshape([self.N,1])
             self.labels_train=np.array(labels_train).reshape([self.N,1])
-            self.labels_test=np.array(labels_test).reshape([self.V,1])
-            self.pixels_test=np.array(pixels_test).reshape([self.V,1,28,28])
+            self.labels_val=np.array(labels_val).reshape([self.V,1])
+            self.img_names_val=np.array(img_names_val).reshape([self.V,1])
 
         if(mode=="test"):
-            test_data=pd.read_csv("../input/test.csv")
+            test_data=pd.read_csv(csv_path+file_name)
             self.T=test_data.shape[0]
-            self.test=np.array(test_data).reshape([self.T,1,28,28])
+            self.img_names_test=np.array(test_data.ix[:,0:1]).reshape([self.T,1])
+            self.labels_test=np.array(test_data.ix[:,5:6]).reshape([self.T,1])
 
     def __getitem__(self,index):
         if(self.mode=="train"):
             label=torch.from_numpy(self.labels_train[index]).type(self.dtype)
-            img=torch.from_numpy(self.pixels_train[index]).type(self.dtype)
+            img_name=self.img_names_train[index]
+            img=np.array(Image.open(csv_path+img_name))
+            img=torch.from_numpy(img).type(self.dtype)
             return img, label
 
         if(self.mode=="val"):
-            label=torch.from_numpy(self.labels_test[index]).type(self.dtype)
-            img=torch.from_numpy(self.pixels_test[index]).type(self.dtype)
+            label=torch.from_numpy(self.labels_val[index]).type(self.dtype)
+            img_name=self.img_names_val[index]
+            img=np.array(Image.open(csv_path+img_name))
+            img=torch.from_numpy(img).type(self.dtype)
             return img,label
 
         if(self.mode=="test"):
-            img=torch.from_numpy(self.test[index]).type(self.dtype)
-            return img
+            label=torch.from_numpy(self.labels_test[index]).type(self.dtype)
+            img_name=self.img_names_test[index]
+            img=np.array(Image.open(csv_path+img_name))
+            img=torch.from_numpy(img).type(self.dtype)
+            return img,label
 
     def __len__(self):
         if(self.mode=="train"):
@@ -54,12 +66,11 @@ class GenderDataset(Dataset):
             return self.T
 
 
-dtype = torch.cuda.FloatTensor
+dtype = torch.FloatTensor
 save_model_path = "model_state_dict.pkl"
-csv_path = '../../data/train_v2.csv'
-img_path = '../../data/train-jpg'
-img_ext=".jpg"
-training_dataset = AmazonDataset(csv_path, img_path, img_ext, dtype)
+csv_path = '../data/smiles_trset/'
+file_name="gender_fex_trset.csv"
+training_dataset = GenderDataset(csv_path, file_name, dtype,"train")
 ## loader
 train_loader = DataLoader(
     training_dataset,
@@ -68,6 +79,7 @@ train_loader = DataLoader(
     #pin_memory=True # CUDA only
 )
 ## simple linear model
+"""
 temp_model=nn.Sequential(
     nn.Conv2d(4, 16, kernel_size=3, stride=1),
     nn.ReLU(inplace=True),
@@ -101,7 +113,7 @@ nn.AdaptiveMaxPool2d(64),
 Flatten(),
 nn.Linear(size[1], 1024),
 nn.ReLU(inplace=True),
-nn.Linear(1024, 17))
+nn.Linear(1024, 1))
 
 model.type(dtype)
 model.train()
@@ -113,3 +125,4 @@ train(train_loader, model, loss_fn, optimizer, dtype,num_epochs=1, print_every=1
 torch.save(model.state_dict(), save_model_path)
 state_dict = torch.load(save_model_path)
 model.load_state_dict(state_dict)
+"""
