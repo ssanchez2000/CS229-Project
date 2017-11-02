@@ -39,21 +39,21 @@ class SmileDataset(Dataset):
         if(self.mode=="train"):
             label=torch.from_numpy(self.labels_train[index]).type(self.dtype)
             img_name=self.img_names_train[index]
-            img=np.array(Image.open(csv_path+img_name))
+            img=np.array(Image.open(self.csv_path+img_name[0])).T
             img=torch.from_numpy(img).type(self.dtype)
             return img, label
 
         if(self.mode=="val"):
             label=torch.from_numpy(self.labels_val[index]).type(self.dtype)
             img_name=self.img_names_val[index]
-            img=np.array(Image.open(csv_path+img_name))
+            img=np.array(Image.open(self.csv_path+img_name[0])).T
             img=torch.from_numpy(img).type(self.dtype)
             return img,label
 
         if(self.mode=="test"):
             label=torch.from_numpy(self.labels_test[index]).type(self.dtype)
             img_name=self.img_names_test[index]
-            img=np.array(Image.open(csv_path+img_name))
+            img=np.array(Image.open(self.csv_path+img_name)).T
             img=torch.from_numpy(img).type(self.dtype)
             return img,label
 
@@ -66,63 +66,144 @@ class SmileDataset(Dataset):
             return self.T
 
 
+class Flatten(nn.Module):
+    def forward(self, x):
+        N, C, H, W = x.size() # read in N, C, H, W
+        return x.view(N, -1)
+
+
+def train(loader_train, model, loss_fn, optimizer, dtype,num_epochs=1, print_every=20):
+    """
+    train `model` on data from `loader_train` for one epoch
+
+    inputs:
+    `loader_train` object subclassed from torch.data.DataLoader
+    `model` neural net, subclassed from torch.nn.Module
+    `loss_fn` loss function see torch.nn for examples
+    `optimizer` subclassed from torch.optim.Optimizer
+    `dtype` data type for variables
+        eg torch.FloatTensor (cpu) or torch.cuda.FloatTensor (gpu)
+    """
+    acc_history = []
+    loss_history = []
+    model.train()
+    for i in range(num_epochs):
+        for t, (x, y) in enumerate(loader_train):
+            x_var = Variable(x.type(dtype))
+            y_var = Variable(y.type(dtype).long())
+            y_var=y_var.view(y_var.data.shape[0])
+            scores = model(x_var)
+            loss = loss_fn(scores, y_var)
+            loss_history.append(loss.data[0])
+
+            y_pred = scores.data.max(1)[1].numpy()
+            acc = (y_var.data.numpy()==y_pred).sum()/y_pred.shape[0]
+            acc_history.append(acc)
+
+            if (t + 1) % print_every == 0:
+                print('t = %d, loss = %.4f, acc = %.4f' % (t + 1, loss.data[0], acc))
+
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+
+    return loss_history, acc_history
+
+def validate_epoch(model, loader, dtype):
+    """
+    validation for MultiLabelMarginLoss using f2 score
+
+    `model` is a trained subclass of torch.nn.Module
+    `loader` is a torch.dataset.DataLoader for validation data
+    `dtype` data type for variables
+        eg torch.FloatTensor (cpu) or torch.cuda.FloatTensor (gpu)
+    """
+    n_samples = len(loader.sampler)
+    x, y = loader.dataset[0]
+    y_array = np.zeros((n_samples))
+    y_pred_array = np.zeros((n_samples))
+    bs = loader.batch_size
+    ## Put the model in test mode
+    model.eval()
+    for i, (x, y) in enumerate(loader):
+        x_var = Variable(x.type(dtype), volatile=True)
+        y_var = Variable(y.type(dtype).long())
+        y_var=y_var.view(y_var.data.shape[0])
+        scores = model(x_var)
+        y_pred = scores.data.max(1)[1].numpy()
+
+        y_array[i*bs:(i+1)*bs] = y_var.data.numpy()
+        y_pred_array[i*bs:(i+1)*bs] = y_pred
+
+    return (y_array==y_pred_array).sum()/y_pred_array.shape[0]
+
 dtype = torch.FloatTensor
 save_model_path = "model_state_dict.pkl"
-csv_path = '../data/smiles_trset/'
-file_name="gender_fex_trset.csv"
-training_dataset = SmileDataset(csv_path, file_name, dtype,"train")
+train_csv_path = '../data/train_face/'
+train_file_name="gender_fex_trset.csv"
+test_csv_path="../data/test_face/"
+test_file_name="gender_fex_valset.csv"
+save_model_path="smile_model"
+
+train_dataset = SmileDataset(train_csv_path, train_file_name, dtype,"train")
 ## loader
-train_loader = DataLoader(
-    training_dataset,
-    batch_size=256,
-    shuffle=True, # 1 for CUDA
-    #pin_memory=True # CUDA only
-)
-## simple linear model
-"""
+train_loader = DataLoader(train_dataset,batch_size=256,shuffle=True)
+
+val_dataset = SmileDataset(train_csv_path, train_file_name, dtype,"val")
+## loader
+val_loader = DataLoader(val_dataset,batch_size=256,shuffle=True)
+
+test_dataset = SmileDataset(test_csv_path, test_file_name, dtype,"test")
+## loader
+test_loader = DataLoader(test_dataset,batch_size=256,shuffle=True)
+print("loaded data")
 temp_model=nn.Sequential(
-    nn.Conv2d(4, 16, kernel_size=3, stride=1),
-    nn.ReLU(inplace=True),
-    nn.BatchNorm2d(16),
-    nn.AdaptiveMaxPool2d(128),
-    nn.Conv2d(16, 32, kernel_size=3, stride=1),
-    nn.ReLU(inplace=True),
-    nn.BatchNorm2d(32),
-    nn.AdaptiveMaxPool2d(64),
+    #nn.Conv2d(4, 16, kernel_size=3, stride=1),
+    #nn.ReLU(inplace=True),
+    #nn.BatchNorm2d(16),
+    #nn.AdaptiveMaxPool2d(64),
+    #nn.Conv2d(16, 32, kernel_size=3, stride=1),
+    #nn.ReLU(inplace=True),
+    #nn.BatchNorm2d(32),
+    #nn.AdaptiveMaxPool2d(16),
     Flatten())
 
 temp_model = temp_model.type(dtype)
 temp_model.train()
 size=0
-print(type(train_loader))
+
 for t, (x, y) in enumerate(train_loader):
-	x_var = Variable(x.type(dtype)).cuda()
-	size=temp_model(x_var).size()
-	if(t==0):
-		break
+    x_var = Variable(x.type(dtype))
+    size=temp_model(x_var).size()
+    if(t==0):
+        break
 
 model = nn.Sequential(
-nn.Conv2d(4, 16, kernel_size=3, stride=1),
-nn.ReLU(inplace=True),
-nn.BatchNorm2d(16),
-nn.AdaptiveMaxPool2d(128),
-nn.Conv2d(16, 32, kernel_size=3, stride=1),
-nn.ReLU(inplace=True),
-nn.BatchNorm2d(32),
-nn.AdaptiveMaxPool2d(64),
+#nn.Conv2d(4, 16, kernel_size=3, stride=1),
+#nn.ReLU(inplace=True),
+#nn.BatchNorm2d(16),
+#nn.AdaptiveMaxPool2d(128),
+#nn.Conv2d(16, 32, kernel_size=3, stride=1),
+#nn.ReLU(inplace=True),
+#nn.BatchNorm2d(32),
+#nn.AdaptiveMaxPool2d(64),
 Flatten(),
 nn.Linear(size[1], 1024),
 nn.ReLU(inplace=True),
-nn.Linear(1024, 1))
+nn.Linear(1024, 2))
+print("defined model")
 
 model.type(dtype)
 model.train()
-loss_fn = nn.MultiLabelSoftMarginLoss().type(dtype)
+loss_fn = nn.CrossEntropyLoss().type(dtype)
 optimizer = optim.Adam(model.parameters(), lr=5e-2)
-torch.cuda.synchronize()
-train(train_loader, model, loss_fn, optimizer, dtype,num_epochs=1, print_every=10)
+print("start training")
+loss_history,acc_history=train(train_loader, model, loss_fn, optimizer, dtype,num_epochs=1, print_every=10)
 
 torch.save(model.state_dict(), save_model_path)
 state_dict = torch.load(save_model_path)
 model.load_state_dict(state_dict)
-"""
+print("model saved and loaded")
+print("start validation")
+val_acc=validate_epoch(model, val_loader, dtype)
+print(val_acc)
