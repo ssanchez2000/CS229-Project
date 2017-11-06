@@ -97,7 +97,7 @@ def train(loader_train, model, loss_fn, optimizer, dtype,num_epochs=1, print_eve
             loss_history.append(loss.data[0])
 
             y_pred = scores.data.max(1)[1].numpy()
-            acc = (y_var.data.numpy()==y_pred).sum()/y_pred.shape[0]
+            acc = (y_var.data.numpy()==y_pred).sum()/float(y_pred.shape[0])
             acc_history.append(acc)
 
             if (t + 1) % print_every == 0:
@@ -135,7 +135,7 @@ def validate_epoch(model, loader, dtype):
         y_array[i*bs:(i+1)*bs] = y_var.data.numpy()
         y_pred_array[i*bs:(i+1)*bs] = y_pred
 
-    return (y_array==y_pred_array).sum()/y_pred_array.shape[0]
+    return (y_array==y_pred_array).sum()/float(y_pred_array.shape[0])
 
 dtype = torch.FloatTensor
 save_model_path = "model_state_dict.pkl"
