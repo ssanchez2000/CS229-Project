@@ -2,8 +2,19 @@ from PIL import Image
 import numpy as np
 import pandas as pd
 from shutil import copyfile
+import os
 
 # Add instructions to copy .csv to test/train directory
+if not os.path.isdir("/data/"):
+    print('Creating Data Directory')
+    os.mkdir("/data/")
+if os.path.isdir("/data/smiles_valset/"):
+    print("You already have raw test images, so I'm using those\n")
+else:
+    print("Downloading Raw Test Images\n")
+    os.command('gsutil -m cp -r gs://cs229-gap-data/RawData/smiles_valset ./data/')
+    print("Raw Training Test Downloaded\n")
+print("Processing Test Images")
 source_csv_path = "data/smiles_valset/"
 file_name = "gender_fex_valset.csv"
 dest_csv_path = "data/test_face/"
@@ -23,6 +34,13 @@ for img_name in img_names:
         img = Image.fromarray(img)
         img.save(dest_csv_path+img_name[0])
 
+if os.path.isdir("/data/smiles_trset/"):
+    print("You already have raw training images, so I'm using those\n")
+else:
+    print("Downloading Raw Training Images\n")
+    os.command('gsutil -m cp -r gs://cs229-gap-data/RawData/smiles_trset ./data/')
+    print("Raw Training Training Downloaded\n")
+print("Processing Training Images")
 source_csv_path = "data/smiles_trset/"
 file_name = "gender_fex_trset.csv"
 dest_csv_path = "data/train_face/"
