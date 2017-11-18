@@ -8,7 +8,7 @@ import os
 if not os.path.isdir("./data/"):
     print('Creating Data Directory')
     os.mkdir("./data/")
-if os.path.isdir("/data/smiles_valset/"):
+if os.path.isdir("./data/smiles_valset/"):
     print("You already have raw test images, so I'm using those\n")
 else:
     print("Downloading Raw Test Images\n")
@@ -18,6 +18,8 @@ print("Processing Test Images")
 source_csv_path = "data/smiles_valset/"
 file_name = "gender_fex_valset.csv"
 dest_csv_path = "data/test_face/"
+if not os.path.isdir("./data/test_face"):
+    os.mkdir("./data/test_face")
 train_data = pd.read_csv(source_csv_path+file_name,header=0)
 img_names = np.array(train_data.ix[:,0:1])
 copyfile(source_csv_path+file_name, dest_csv_path+file_name)
@@ -44,6 +46,8 @@ print("Processing Training Images")
 source_csv_path = "data/smiles_trset/"
 file_name = "gender_fex_trset.csv"
 dest_csv_path = "data/train_face/"
+if not os.path.isdir("./data/train_face"):
+    os.mkdir("./data/train_face")
 train_data = pd.read_csv(source_csv_path+file_name,header=0)
 img_names = np.array(train_data.ix[:,0:1])
 copyfile(source_csv_path+file_name, dest_csv_path+file_name)
