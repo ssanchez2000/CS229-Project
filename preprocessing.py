@@ -15,7 +15,7 @@ else:
     os.system('gsutil -m cp -r gs://cs229-gap-data/RawData/smiles_valset ./data/')
     print("Raw Training Test Downloaded\n")
 print("Processing Test Images")
-source_csv_path = "data/smiles_valset/"
+source_csv_path = "./"
 file_name = "gender_fex_valset.csv"
 dest_csv_path = "data/test_face/"
 if not os.path.isdir("./data/test_face"):
@@ -43,7 +43,7 @@ else:
     os.system('gsutil -m cp -r gs://cs229-gap-data/RawData/smiles_trset ./data/')
     print("Raw Training Training Downloaded\n")
 print("Processing Training Images")
-source_csv_path = "data/smiles_trset/"
+source_csv_path = "./"
 file_name = "gender_fex_trset.csv"
 dest_csv_path = "data/train_face/"
 if not os.path.isdir("./data/train_face"):
