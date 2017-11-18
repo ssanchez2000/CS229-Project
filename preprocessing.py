@@ -5,9 +5,9 @@ from shutil import copyfile
 import os
 
 # Add instructions to copy .csv to test/train directory
-if not os.path.isdir("/data/"):
+if not os.path.isdir("./data/"):
     print('Creating Data Directory')
-    os.mkdir("/data/")
+    os.mkdir("./data/")
 if os.path.isdir("/data/smiles_valset/"):
     print("You already have raw test images, so I'm using those\n")
 else:
