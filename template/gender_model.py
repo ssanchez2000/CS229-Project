@@ -10,7 +10,7 @@ import numpy
 from PIL import Image
 import pandas as pd
 from sklearn.model_selection import train_test_split
-
+import matplotlib.pyplot as plt
 class GenderDataset(Dataset):
 
     def __init__(self,csv_path,file_name,dtype,mode):
@@ -146,6 +146,7 @@ train_file_name="gender_fex_trset.csv"
 test_csv_path="../data/test_face/"
 test_file_name="gender_fex_valset.csv"
 save_model_path="gender_model.pkl"
+
 train_dataset = GenderDataset(train_csv_path, train_file_name, dtype,"train")
 ## loader
 train_loader = DataLoader(train_dataset,batch_size=256,shuffle=True)
@@ -200,7 +201,19 @@ model.train()
 loss_fn = nn.CrossEntropyLoss().type(dtype)
 optimizer = optim.Adam(model.parameters(), lr=5e-2)
 print("start training")
-loss_history,acc_history=train(train_loader, model, loss_fn, optimizer, dtype,num_epochs=1, print_every=10)
+loss_history,acc_history=train(train_loader, model, loss_fn, optimizer, dtype,num_epochs=15, print_every=10)
+
+plt.plot(range(len(loss_history)),loss_history)
+plt.xlabel("iterations")
+plt.ylabel("loss")
+plt.savefig("gender_loss.png")
+plt.gcf().clear()
+
+plt.plot(range(len(acc_history)),acc_history)
+plt.xlabel("iterations")
+plt.ylabel("accuracy")
+plt.savefig("gender_acc.png")
+plt.gcf().clear()
 
 torch.save(model.state_dict(), save_model_path)
 state_dict = torch.load(save_model_path)

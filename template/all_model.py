@@ -10,7 +10,7 @@ import numpy
 from PIL import Image
 import pandas as pd
 from sklearn.model_selection import train_test_split
-
+import matplotlib.pyplot as plt
 class AllDataset(Dataset):
 
     def __init__(self,csv_path,file_name,dtype,mode):
@@ -209,6 +209,8 @@ test_file_name="gender_fex_valset.csv"
 save_model_path="all_model.pkl"
 save_gender_model_path="all_gender_model.pkl"
 save_smile_model_path="all_smile_model.pkl"
+
+
 train_dataset = AllDataset(train_csv_path, train_file_name, dtype,"train")
 ## loader
 train_loader = DataLoader(train_dataset,batch_size=256,shuffle=True)
@@ -267,6 +269,42 @@ gender_optimizer = optim.Adam(gender_model.parameters(), lr=5e-2)
 smile_optimizer = optim.Adam(smile_model.parameters(), lr=5e-2)
 print("start training")
 loss_all_history, loss_gender_history,loss_smile_history, acc_all_history, acc_gender_history,acc_smile_history=all_train(train_loader, all_model,gender_model,smile_model, loss_fn, all_optimizer,gender_optimizer,smile_optimizer, dtype,num_epochs=1, print_every=1)
+
+plt.plot(range(len(loss_smile_history)),loss_smile_history)
+plt.xlabel("iterations")
+plt.ylabel("loss")
+plt.savefig("smile_loss_all.png")
+plt.gcf().clear()
+
+plt.plot(range(len(acc_smile_history)),acc_smile_history)
+plt.xlabel("iterations")
+plt.ylabel("accuracy")
+plt.savefig("smile_acc_all.png")
+plt.gcf().clear()
+
+plt.plot(range(len(loss_gender_history)),loss_gender_history)
+plt.xlabel("iterations")
+plt.ylabel("loss")
+plt.savefig("gender_loss_all.png")
+plt.gcf().clear()
+
+plt.plot(range(len(acc_gender_history)),acc_gender_history)
+plt.xlabel("iterations")
+plt.ylabel("accuracy")
+plt.savefig("gender_acc_all.png")
+plt.gcf().clear()
+
+plt.plot(range(len(loss_all_history)),loss_all_history)
+plt.xlabel("iterations")
+plt.ylabel("loss")
+plt.savefig("all_loss.png")
+plt.gcf().clear()
+
+plt.plot(range(len(acc_all_history)),acc_all_history)
+plt.xlabel("iterations")
+plt.ylabel("accuracy")
+plt.savefig("all_acc.png")
+plt.gcf().clear()
 
 torch.save(all_model.state_dict(), save_model_path)
 torch.save(gender_model.state_dict(), save_gender_model_path)
