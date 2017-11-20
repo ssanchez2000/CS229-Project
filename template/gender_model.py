@@ -201,6 +201,7 @@ model.train()
 loss_fn = nn.CrossEntropyLoss().type(dtype)
 optimizer = optim.Adam(model.parameters(), lr=5e-2)
 print("start training")
+"""
 loss_history,acc_history=train(train_loader, model, loss_fn, optimizer, dtype,num_epochs=15, print_every=10)
 
 plt.plot(range(len(loss_history)),loss_history)
@@ -216,6 +217,7 @@ plt.savefig("gender_acc.png")
 plt.gcf().clear()
 
 torch.save(model.state_dict(), save_model_path)
+"""
 state_dict = torch.load(save_model_path)
 model.load_state_dict(state_dict)
 print("model saved and loaded")
