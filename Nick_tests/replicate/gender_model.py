@@ -139,7 +139,7 @@ def validate_epoch(model, loader, dtype):
 
     return (y_array==y_pred_array).sum()/float(y_pred_array.shape[0])
 
-dtype = torch.FloatTensor
+dtype = torch.cuda.FloatTensor
 
 train_csv_path = '../data/train_face/'
 train_file_name="gender_fex_trset.csv"
@@ -160,14 +160,14 @@ test_loader = DataLoader(test_dataset,batch_size=256,shuffle=True)
 print("loaded data")
 
 temp_model=nn.Sequential(
-    #nn.Conv2d(4, 16, kernel_size=3, stride=1),
-    #nn.ReLU(inplace=True),
-    #nn.BatchNorm2d(16),
-    #nn.AdaptiveMaxPool2d(64),
-    #nn.Conv2d(16, 32, kernel_size=3, stride=1),
-    #nn.ReLU(inplace=True),
-    #nn.BatchNorm2d(32),
-    #nn.AdaptiveMaxPool2d(16),
+    nn.Conv2d(4, 16, kernel_size=3, stride=1),
+    nn.ReLU(inplace=True),
+    nn.BatchNorm2d(16),
+    nn.AdaptiveMaxPool2d(64),
+    nn.Conv2d(16, 32, kernel_size=3, stride=1),
+    nn.ReLU(inplace=True),
+    nn.BatchNorm2d(32),
+    nn.AdaptiveMaxPool2d(16),
     Flatten())
 
 temp_model = temp_model.type(dtype)
@@ -181,14 +181,14 @@ for t, (x, y) in enumerate(train_loader):
         break
 
 model = nn.Sequential(
-#nn.Conv2d(4, 16, kernel_size=3, stride=1),
-#nn.ReLU(inplace=True),
-#nn.BatchNorm2d(16),
-#nn.AdaptiveMaxPool2d(128),
-#nn.Conv2d(16, 32, kernel_size=3, stride=1),
-#nn.ReLU(inplace=True),
-#nn.BatchNorm2d(32),
-#nn.AdaptiveMaxPool2d(64),
+nn.Conv2d(4, 16, kernel_size=3, stride=1),
+nn.ReLU(inplace=True),
+nn.BatchNorm2d(16),
+nn.AdaptiveMaxPool2d(128),
+nn.Conv2d(16, 32, kernel_size=3, stride=1),
+nn.ReLU(inplace=True),
+nn.BatchNorm2d(32),
+nn.AdaptiveMaxPool2d(64),
 Flatten(),
 nn.Linear(size[1], 1024),
 nn.ReLU(inplace=True),
