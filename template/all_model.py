@@ -240,9 +240,9 @@ for t, (x, y, z) in enumerate(train_loader):
 
 all_model = nn.Sequential(
 Flatten(),
-nn.Linear(size[1], 10),
+nn.Linear(size[1], 256),
 nn.ReLU(inplace=True),
-nn.Linear(10, size[1]))
+nn.Linear(256, size[1]))
 all_model.type(dtype)
 all_model.train()
 print("defined all model")
