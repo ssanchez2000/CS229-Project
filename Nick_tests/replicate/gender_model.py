@@ -10,6 +10,7 @@ import numpy
 from PIL import Image
 import pandas as pd
 from sklearn.model_selection import train_test_split
+import matplotlib.pyplot as plt
 
 class GenderDataset(Dataset):
 
@@ -188,8 +189,8 @@ model = nn.Sequential(
     Flatten(),
     nn.Linear(size[1], 512),
     nn.ReLU(inplace=True),
-    # nn.Linear(512, 512),
-    # nn.ReLU(inplace=True),
+    nn.Linear(512, 512),
+    nn.ReLU(inplace=True),
     nn.Linear(512, 2))
 print("defined model")
 
