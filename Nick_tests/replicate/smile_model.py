@@ -53,7 +53,7 @@ class SmileDataset(Dataset):
         if(self.mode=="test"):
             label=torch.from_numpy(self.labels_test[index]).type(self.dtype)
             img_name=self.img_names_test[index]
-            img=np.array(Image.open(self.csv_path+img_name)).T
+            img=np.array(Image.open(self.csv_path+img_name[0])).T
             img=torch.from_numpy(img).type(self.dtype)
             return img,label
 
@@ -64,7 +64,6 @@ class SmileDataset(Dataset):
             return self.V
         if(self.mode=="test"):
             return self.T
-
 
 class Flatten(nn.Module):
     def forward(self, x):
@@ -143,7 +142,6 @@ train_file_name="gender_fex_trset.csv"
 test_csv_path="../../data/test_face/"
 test_file_name="gender_fex_valset.csv"
 save_model_path="smile_model.pkl"
-
 train_dataset = SmileDataset(train_csv_path, train_file_name, dtype,"train")
 ## loader
 train_loader = DataLoader(train_dataset,batch_size=256,shuffle=True)
@@ -156,6 +154,7 @@ test_dataset = SmileDataset(test_csv_path, test_file_name, dtype,"test")
 ## loader
 test_loader = DataLoader(test_dataset,batch_size=256,shuffle=True)
 print("loaded data")
+
 temp_model=nn.Sequential(
     nn.Conv2d(3, 16, kernel_size=3, stride=1),
     nn.ReLU(inplace=True),

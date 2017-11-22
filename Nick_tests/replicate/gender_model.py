@@ -14,7 +14,7 @@ from sklearn.model_selection import train_test_split
 class GenderDataset(Dataset):
 
     def __init__(self,csv_path,file_name,dtype,mode):
-        train_data = pd.read_csv(csv_path+file_name,header=0, skiprows=[0])
+        train_data = pd.read_csv(csv_path+file_name)
         self.dtype = dtype
         self.mode=mode
         self.csv_path=csv_path
@@ -39,24 +39,21 @@ class GenderDataset(Dataset):
         if(self.mode=="train"):
             label=torch.from_numpy(self.labels_train[index]).type(self.dtype)
             img_name=self.img_names_train[index]
-            img=Image.open(self.csv_path+img_name[0])
-            img=np.array(img).T
+            img=np.array(Image.open(self.csv_path+img_name[0])).T
             img=torch.from_numpy(img).type(self.dtype)
             return img, label
 
         if(self.mode=="val"):
             label=torch.from_numpy(self.labels_val[index]).type(self.dtype)
             img_name=self.img_names_val[index]
-            img=Image.open(self.csv_path+img_name[0])
-            img=np.array(img).T
+            img=np.array(Image.open(self.csv_path+img_name[0])).T
             img=torch.from_numpy(img).type(self.dtype)
             return img,label
 
         if(self.mode=="test"):
             label=torch.from_numpy(self.labels_test[index]).type(self.dtype)
             img_name=self.img_names_test[index]
-            img=Image.open(self.csv_path+img_name[0])
-            img=np.array(img).T
+            img=np.array(Image.open(self.csv_path+img_name[0])).T
             img=torch.from_numpy(img).type(self.dtype)
             return img,label
 
@@ -132,18 +129,17 @@ def validate_epoch(model, loader, dtype):
         y_var = Variable(y.type(dtype).long())
         y_var=y_var.view(y_var.data.shape[0])
         scores = model(x_var)
-        y_pred = scores.data.max(1)[1].numpy()
+        y_pred = scores.data.max(1)[1].cpu().numpy()
 
-        y_array[i*bs:(i+1)*bs] = y_var.data.numpy()
+        y_array[i*bs:(i+1)*bs] = y_var.data.cpu().numpy()
         y_pred_array[i*bs:(i+1)*bs] = y_pred
 
     return (y_array==y_pred_array).sum()/float(y_pred_array.shape[0])
 
 dtype = torch.cuda.FloatTensor
-
-train_csv_path = '../data/train_face/'
+train_csv_path = '../../data/train_face/'
 train_file_name="gender_fex_trset.csv"
-test_csv_path="../data/test_face/"
+test_csv_path="../../data/test_face/"
 test_file_name="gender_fex_valset.csv"
 save_model_path="gender_model.pkl"
 train_dataset = GenderDataset(train_csv_path, train_file_name, dtype,"train")
@@ -160,7 +156,7 @@ test_loader = DataLoader(test_dataset,batch_size=256,shuffle=True)
 print("loaded data")
 
 temp_model=nn.Sequential(
-    nn.Conv2d(4, 16, kernel_size=3, stride=1),
+    nn.Conv2d(3, 16, kernel_size=3, stride=1),
     nn.ReLU(inplace=True),
     nn.BatchNorm2d(16),
     nn.AdaptiveMaxPool2d(64),
@@ -181,18 +177,20 @@ for t, (x, y) in enumerate(train_loader):
         break
 
 model = nn.Sequential(
-nn.Conv2d(4, 16, kernel_size=3, stride=1),
-nn.ReLU(inplace=True),
-nn.BatchNorm2d(16),
-nn.AdaptiveMaxPool2d(128),
-nn.Conv2d(16, 32, kernel_size=3, stride=1),
-nn.ReLU(inplace=True),
-nn.BatchNorm2d(32),
-nn.AdaptiveMaxPool2d(64),
-Flatten(),
-nn.Linear(size[1], 1024),
-nn.ReLU(inplace=True),
-nn.Linear(1024, 2))
+    nn.Conv2d(3, 16, kernel_size=3, stride=1),
+    nn.ReLU(inplace=True),
+    nn.BatchNorm2d(16),
+    nn.AdaptiveMaxPool2d(128),
+    nn.Conv2d(16, 32, kernel_size=3, stride=1),
+    nn.ReLU(inplace=True),
+    nn.BatchNorm2d(32),
+    nn.AdaptiveMaxPool2d(64),
+    Flatten(),
+    nn.Linear(size[1], 512),
+    nn.ReLU(inplace=True),
+    nn.Linear(512, 512),
+    nn.ReLU(inplace=True),
+    nn.Linear(512, 2))
 print("defined model")
 
 model.type(dtype)
