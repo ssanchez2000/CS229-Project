@@ -157,14 +157,14 @@ test_dataset = SmileDataset(test_csv_path, test_file_name, dtype,"test")
 test_loader = DataLoader(test_dataset,batch_size=256,shuffle=True)
 print("loaded data")
 temp_model=nn.Sequential(
-    #nn.Conv2d(4, 16, kernel_size=3, stride=1),
-    #nn.ReLU(inplace=True),
-    #nn.BatchNorm2d(16),
-    #nn.AdaptiveMaxPool2d(64),
-    #nn.Conv2d(16, 32, kernel_size=3, stride=1),
-    #nn.ReLU(inplace=True),
-    #nn.BatchNorm2d(32),
-    #nn.AdaptiveMaxPool2d(16),
+    nn.Conv2d(3, 16, kernel_size=3, stride=1),
+    nn.ReLU(inplace=True),
+    nn.BatchNorm2d(16),
+    nn.AdaptiveMaxPool2d(64),
+    nn.Conv2d(16, 32, kernel_size=3, stride=1),
+    nn.ReLU(inplace=True),
+    nn.BatchNorm2d(32),
+    nn.AdaptiveMaxPool2d(16),
     Flatten())
 
 temp_model = temp_model.type(dtype)
@@ -178,18 +178,20 @@ for t, (x, y) in enumerate(train_loader):
         break
 
 model = nn.Sequential(
-#nn.Conv2d(4, 16, kernel_size=3, stride=1),
-#nn.ReLU(inplace=True),
-#nn.BatchNorm2d(16),
-#nn.AdaptiveMaxPool2d(128),
-#nn.Conv2d(16, 32, kernel_size=3, stride=1),
-#nn.ReLU(inplace=True),
-#nn.BatchNorm2d(32),
-#nn.AdaptiveMaxPool2d(64),
-Flatten(),
-nn.Linear(size[1], 1024),
-nn.ReLU(inplace=True),
-nn.Linear(1024, 2))
+    nn.Conv2d(3, 16, kernel_size=3, stride=1),
+    nn.ReLU(inplace=True),
+    nn.BatchNorm2d(16),
+    nn.AdaptiveMaxPool2d(128),
+    nn.Conv2d(16, 32, kernel_size=3, stride=1),
+    nn.ReLU(inplace=True),
+    nn.BatchNorm2d(32),
+    nn.AdaptiveMaxPool2d(64),
+    Flatten(),
+    nn.Linear(size[1], 512),
+    nn.ReLU(inplace=True),
+    nn.Linear(512, 512),
+    nn.ReLU(inplace=True),
+    nn.Linear(512, 2))
 print("defined model")
 
 model.type(dtype)
