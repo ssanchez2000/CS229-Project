@@ -198,7 +198,7 @@ model.train()
 loss_fn = nn.CrossEntropyLoss().type(dtype)
 optimizer = optim.Adam(model.parameters(), lr=5e-2)
 print("start training")
-loss_history,acc_history=train(train_loader, model, loss_fn, optimizer, dtype,num_epochs=1, print_every=10)
+loss_history,acc_history=train(train_loader, model, loss_fn, optimizer, dtype,num_epochs=10, print_every=10)
 
 torch.save(model.state_dict(), save_model_path)
 state_dict = torch.load(save_model_path)
