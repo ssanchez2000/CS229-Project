@@ -159,11 +159,11 @@ temp_model=nn.Sequential(
     nn.Conv2d(3, 16, kernel_size=3, stride=1),
     nn.ReLU(inplace=True),
     nn.BatchNorm2d(16),
-    nn.AdaptiveMaxPool2d(64),
+    nn.AdaptiveMaxPool2d(128),
     nn.Conv2d(16, 32, kernel_size=3, stride=1),
     nn.ReLU(inplace=True),
     nn.BatchNorm2d(32),
-    nn.AdaptiveMaxPool2d(16),
+    nn.AdaptiveMaxPool2d(64),
     Flatten())
 
 temp_model = temp_model.type(dtype)
