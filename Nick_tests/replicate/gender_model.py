@@ -10,6 +10,8 @@ import numpy
 from PIL import Image
 import pandas as pd
 from sklearn.model_selection import train_test_split
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 class GenderDataset(Dataset):
@@ -137,7 +139,7 @@ def validate_epoch(model, loader, dtype):
 
     return (y_array==y_pred_array).sum()/float(y_pred_array.shape[0])
 
-dtype = torch.FloatTensor
+dtype = torch.cuda.FloatTensor
 train_csv_path = '../../data/train_face/'
 train_file_name="gender_fex_trset.csv"
 test_csv_path="../../data/test_face/"
@@ -199,7 +201,8 @@ model.train()
 loss_fn = nn.CrossEntropyLoss().type(dtype)
 optimizer = optim.Adam(model.parameters(), lr=1e-4)
 print("start training")
-loss_history,acc_history=train(train_loader, model, loss_fn, optimizer, dtype,num_epochs=10, print_every=1)
+loss_history,acc_history=train(train_loader, model, loss_fn, optimizer, dtype,num_epochs=15, print_every=17)
+
 
 plt.plot(range(len(loss_history)),loss_history)
 plt.xlabel("iterations")
