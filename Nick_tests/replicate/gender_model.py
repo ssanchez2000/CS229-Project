@@ -137,7 +137,7 @@ def validate_epoch(model, loader, dtype):
 
     return (y_array==y_pred_array).sum()/float(y_pred_array.shape[0])
 
-dtype = torch.FloatTensor
+dtype = torch.cuda.FloatTensor
 train_csv_path = '../../data/train_face/'
 train_file_name="gender_fex_trset.csv"
 test_csv_path="../../data/test_face/"
@@ -197,7 +197,7 @@ print("defined model")
 model.type(dtype)
 model.train()
 loss_fn = nn.CrossEntropyLoss().type(dtype)
-optimizer = optim.Adam(model.parameters(), lr=1e-4)
+optimizer = optim.Adam(model.parameters(), lr=1e-4,weight_decay=0.25)
 print("start training")
 loss_history,acc_history=train(train_loader, model, loss_fn, optimizer, dtype,num_epochs=10, print_every=1)
 
