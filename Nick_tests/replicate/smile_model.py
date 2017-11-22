@@ -96,8 +96,8 @@ def train(loader_train, model, loss_fn, optimizer, dtype,num_epochs=1, print_eve
             loss = loss_fn(scores, y_var)
             loss_history.append(loss.data[0])
 
-            y_pred = scores.data.max(1)[1].numpy()
-            acc = (y_var.data.numpy()==y_pred).sum()/float(y_pred.shape[0])
+            y_pred = scores.data.max(1)[1].cpu().numpy()
+            acc = (y_var.data.cpu().numpy()==y_pred).sum()/float(y_pred.shape[0])
             acc_history.append(acc)
 
             if (t + 1) % print_every == 0:
@@ -130,17 +130,17 @@ def validate_epoch(model, loader, dtype):
         y_var = Variable(y.type(dtype).long())
         y_var=y_var.view(y_var.data.shape[0])
         scores = model(x_var)
-        y_pred = scores.data.max(1)[1].numpy()
+        y_pred = scores.data.max(1)[1].cpu().numpy()
 
-        y_array[i*bs:(i+1)*bs] = y_var.data.numpy()
+        y_array[i*bs:(i+1)*bs] = y_var.data.cpu().numpy()
         y_pred_array[i*bs:(i+1)*bs] = y_pred
 
     return (y_array==y_pred_array).sum()/float(y_pred_array.shape[0])
 
-dtype = torch.FloatTensor
-train_csv_path = '../data/train_face/'
+dtype = torch.cuda.FloatTensor
+train_csv_path = '../../data/train_face/'
 train_file_name="gender_fex_trset.csv"
-test_csv_path="../data/test_face/"
+test_csv_path="../../data/test_face/"
 test_file_name="gender_fex_valset.csv"
 save_model_path="smile_model.pkl"
 
