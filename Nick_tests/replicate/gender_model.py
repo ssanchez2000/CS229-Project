@@ -159,14 +159,14 @@ test_loader = DataLoader(test_dataset,batch_size=256,shuffle=True)
 print("loaded data")
 
 temp_model=nn.Sequential(
-    # nn.Conv2d(3, 16, kernel_size=3, stride=1),
-    # nn.ReLU(inplace=True),
-    # nn.BatchNorm2d(16),
-    # nn.AdaptiveMaxPool2d(128),
-    # nn.Conv2d(16, 32, kernel_size=3, stride=1),
-    # nn.ReLU(inplace=True),
-    # nn.BatchNorm2d(32),
-    # nn.AdaptiveMaxPool2d(64),
+     nn.Conv2d(3, 16, kernel_size=3, stride=1),
+     nn.ReLU(inplace=True),
+     nn.BatchNorm2d(16),
+     nn.AdaptiveMaxPool2d(128),
+     nn.Conv2d(16, 32, kernel_size=3, stride=1),
+     nn.ReLU(inplace=True),
+     nn.BatchNorm2d(32),
+     nn.AdaptiveMaxPool2d(64),
     Flatten())
 
 temp_model = temp_model.type(dtype)
@@ -180,14 +180,14 @@ for t, (x, y) in enumerate(train_loader):
         break
 
 model = nn.Sequential(
-    #nn.Conv2d(3, 16, kernel_size=3, stride=1),
-    #nn.ReLU(inplace=True),
-    #nn.BatchNorm2d(16),
-    #nn.AdaptiveMaxPool2d(128),
-    #nn.Conv2d(16, 32, kernel_size=3, stride=1),
-    # nn.ReLU(inplace=True),
-    # nn.BatchNorm2d(32),
-    # nn.AdaptiveMaxPool2d(64),
+    nn.Conv2d(3, 16, kernel_size=3, stride=1),
+    nn.ReLU(inplace=True),
+    nn.BatchNorm2d(16),
+    nn.AdaptiveMaxPool2d(128),
+    nn.Conv2d(16, 32, kernel_size=3, stride=1),
+     nn.ReLU(inplace=True),
+     nn.BatchNorm2d(32),
+     nn.AdaptiveMaxPool2d(64),
     Flatten(),
     nn.Linear(size[1], 512),
     nn.ReLU(inplace=True),
@@ -201,7 +201,7 @@ model.train()
 loss_fn = nn.CrossEntropyLoss().type(dtype)
 optimizer = optim.Adam(model.parameters(), lr=1e-6)
 print("start training")
-loss_history,acc_history=train(train_loader, model, loss_fn, optimizer, dtype,num_epochs=15, print_every=17)
+loss_history,acc_history=train(train_loader, model, loss_fn, optimizer, dtype,num_epochs=20, print_every=17)
 
 
 plt.plot(range(len(loss_history)),loss_history)
