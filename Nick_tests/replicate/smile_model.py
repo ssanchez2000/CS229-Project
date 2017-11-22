@@ -156,14 +156,18 @@ test_loader = DataLoader(test_dataset,batch_size=256,shuffle=True)
 print("loaded data")
 
 temp_model=nn.Sequential(
-    nn.Conv2d(3, 16, kernel_size=3, stride=1),
+    nn.Conv2d(3, 96, kernel_size=7, stride=4, padding=0),
     nn.ReLU(inplace=True),
-    nn.BatchNorm2d(16),
-    nn.AdaptiveMaxPool2d(128),
-    nn.Conv2d(16, 32, kernel_size=3, stride=1),
+    nn.AdaptiveMaxPool2d(28),
+    nn.BatchNorm2d(96),
+    nn.Conv2d(96, 256, kernel_size=5, stride=1,padding=2),
     nn.ReLU(inplace=True),
-    nn.BatchNorm2d(32),
-    nn.AdaptiveMaxPool2d(64),
+    nn.AdaptiveMaxPool2d(14),
+    nn.BatchNorm2d(256),
+    nn.Conv2d(256, 256, kernel_size=3, stride=1,padding=1),
+    nn.ReLU(inplace=True),
+    nn.AdaptiveMaxPool2d(7),
+    nn.BatchNorm2d(256),
     Flatten())
 
 temp_model = temp_model.type(dtype)
@@ -177,19 +181,25 @@ for t, (x, y) in enumerate(train_loader):
         break
 
 model = nn.Sequential(
-    nn.Conv2d(3, 16, kernel_size=3, stride=1),
+    nn.Conv2d(3, 96, kernel_size=7, stride=4, padding=0),
     nn.ReLU(inplace=True),
-    nn.BatchNorm2d(16),
-    nn.AdaptiveMaxPool2d(128),
-    nn.Conv2d(16, 32, kernel_size=3, stride=1),
+    nn.AdaptiveMaxPool2d(28),
+    nn.BatchNorm2d(96),
+    nn.Conv2d(96, 256, kernel_size=5, stride=1, padding=2),
     nn.ReLU(inplace=True),
-    nn.BatchNorm2d(32),
-    nn.AdaptiveMaxPool2d(64),
+    nn.AdaptiveMaxPool2d(14),
+    nn.BatchNorm2d(256),
+    nn.Conv2d(256, 256, kernel_size=3, stride=1, padding=1),
+    nn.ReLU(inplace=True),
+    nn.AdaptiveMaxPool2d(7),
+    nn.BatchNorm2d(256),
     Flatten(),
     nn.Linear(size[1], 512),
     nn.ReLU(inplace=True),
+    nn.Dropout(p=0.05),
     nn.Linear(512, 512),
     nn.ReLU(inplace=True),
+    nn.Dropout(p=0.05),
     nn.Linear(512, 2))
 print("defined model")
 
