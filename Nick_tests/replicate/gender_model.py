@@ -201,7 +201,7 @@ model.train()
 loss_fn = nn.CrossEntropyLoss().type(dtype)
 optimizer = optim.Adam(model.parameters(), lr=1e-6)
 print("start training")
-loss_history,acc_history=train(train_loader, model, loss_fn, optimizer, dtype,num_epochs=20, print_every=17)
+loss_history,acc_history=train(train_loader, model, loss_fn, optimizer, dtype,num_epochs=40, print_every=17)
 
 
 plt.plot(range(len(loss_history)),loss_history)
