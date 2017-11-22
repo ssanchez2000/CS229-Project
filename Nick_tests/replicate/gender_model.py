@@ -30,7 +30,7 @@ class GenderDataset(Dataset):
             self.img_names_val=np.array(img_names_val).reshape([self.V,1])
 
         if(mode=="test"):
-            test_data=pd.read_csv(csv_path+file_name,header=0, skiprows=[0])
+            test_data=pd.read_csv(csv_path+file_name)
             self.T=test_data.shape[0]
             self.img_names_test=np.array(test_data.ix[:,0:1]).reshape([self.T,1])
             self.labels_test=np.array(test_data.ix[:,5:6]).reshape([self.T,1])
@@ -95,8 +95,8 @@ def train(loader_train, model, loss_fn, optimizer, dtype,num_epochs=1, print_eve
             loss = loss_fn(scores, y_var)
             loss_history.append(loss.data[0])
 
-            y_pred = scores.data.max(1)[1].numpy()
-            acc = (y_var.data.numpy()==y_pred).sum()/float(y_pred.shape[0])
+            y_pred = scores.data.max(1)[1].cpu().numpy()
+            acc = (y_var.data.cpu().numpy()==y_pred).sum()/float(y_pred.shape[0])
             acc_history.append(acc)
 
             if (t + 1) % print_every == 0:
