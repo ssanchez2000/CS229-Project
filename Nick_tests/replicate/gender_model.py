@@ -10,6 +10,8 @@ import numpy
 from PIL import Image
 import pandas as pd
 from sklearn.model_selection import train_test_split
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 class GenderDataset(Dataset):
@@ -137,7 +139,7 @@ def validate_epoch(model, loader, dtype):
 
     return (y_array==y_pred_array).sum()/float(y_pred_array.shape[0])
 
-dtype = torch.cuda.FloatTensor
+dtype = torch.FloatTensor
 train_csv_path = '../../data/train_face/'
 train_file_name="gender_fex_trset.csv"
 test_csv_path="../../data/test_face/"
@@ -157,14 +159,14 @@ test_loader = DataLoader(test_dataset,batch_size=256,shuffle=True)
 print("loaded data")
 
 temp_model=nn.Sequential(
-    # nn.Conv2d(3, 16, kernel_size=3, stride=1),
-    # nn.ReLU(inplace=True),
-    # nn.BatchNorm2d(16),
-    # nn.AdaptiveMaxPool2d(128),
-    # nn.Conv2d(16, 32, kernel_size=3, stride=1),
-    # nn.ReLU(inplace=True),
-    # nn.BatchNorm2d(32),
-    # nn.AdaptiveMaxPool2d(64),
+     nn.Conv2d(3, 16, kernel_size=3, stride=1),
+     nn.ReLU(inplace=True),
+     nn.BatchNorm2d(16),
+     nn.AdaptiveMaxPool2d(128),
+     nn.Conv2d(16, 32, kernel_size=3, stride=1),
+     nn.ReLU(inplace=True),
+     nn.BatchNorm2d(32),
+     nn.AdaptiveMaxPool2d(64),
     Flatten())
 
 temp_model = temp_model.type(dtype)
@@ -178,14 +180,14 @@ for t, (x, y) in enumerate(train_loader):
         break
 
 model = nn.Sequential(
-    #nn.Conv2d(3, 16, kernel_size=3, stride=1),
-    #nn.ReLU(inplace=True),
-    #nn.BatchNorm2d(16),
-    #nn.AdaptiveMaxPool2d(128),
-    #nn.Conv2d(16, 32, kernel_size=3, stride=1),
-    # nn.ReLU(inplace=True),
-    # nn.BatchNorm2d(32),
-    # nn.AdaptiveMaxPool2d(64),
+    nn.Conv2d(3, 16, kernel_size=3, stride=1),
+    nn.ReLU(inplace=True),
+    nn.BatchNorm2d(16),
+    nn.AdaptiveMaxPool2d(128),
+    nn.Conv2d(16, 32, kernel_size=3, stride=1),
+     nn.ReLU(inplace=True),
+     nn.BatchNorm2d(32),
+     nn.AdaptiveMaxPool2d(64),
     Flatten(),
     nn.Linear(size[1], 512),
     nn.ReLU(inplace=True),
@@ -198,6 +200,7 @@ model.type(dtype)
 model.train()
 loss_fn = nn.CrossEntropyLoss().type(dtype)
 optimizer = optim.Adam(model.parameters(), lr=1e-4,weight_decay=0.25)
+optimizer = optim.Adam(model.parameters(), lr=1e-6)
 print("start training")
 loss_history,acc_history=train(train_loader, model, loss_fn, optimizer, dtype,num_epochs=10, print_every=1)
 

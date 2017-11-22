@@ -13,7 +13,7 @@ Copyright 2016 Jihun Hamm
 
 
 import numpy as np
-import src.sparse_autoencoder as sparse_autoencoder
+import MiniMaxPaper.src.sparse_autoencoder as sparse_autoencoder
 from scipy.optimize import minimize
 
 

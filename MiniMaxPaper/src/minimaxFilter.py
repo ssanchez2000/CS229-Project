@@ -13,8 +13,8 @@ Copyright 2016 Jihun Hamm
 
 import numpy as np
 #reload(kiwiel)
-import src.alternatingOptim as alternatingOptim
-import src.kiwiel as kiwiel
+import MiniMaxPaper.src.alternatingOptim as alternatingOptim
+import MiniMaxPaper.src.kiwiel as kiwiel
 from scipy.optimize import minimize
 
 def init(W0,method1):

@@ -13,9 +13,9 @@ Copyright 2016 Jihun Hamm
 
 import numpy as np
 import scipy.io
-import src.minimaxFilter as minimaxFilter
-from filterAlg_NN import NN1
-from src.learningAlg import mlogreg
+import MiniMaxPaper.src.minimaxFilter as minimaxFilter
+from MiniMaxPaper.src.filterAlg_NN import NN1
+from MiniMaxPaper.src.learningAlg import mlogreg
 
 
 ##%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -78,7 +78,7 @@ for trial in range(ntrials):
         hparams1 = {'K':K1, 'l':lambda1, 'd':d}
         hparams2 = {'K':K2,'l':lambda2, 'd':d}
 
-        if False:
+        if True:
             W0 = NN1.init(hparams0)
         else:
             print('Pre-training by autoencoder')
