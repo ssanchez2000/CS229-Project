@@ -24,7 +24,7 @@ class GenderDataset(Dataset):
         if(mode=="train" or mode=="val"):
             labels=train_data.ix[:,5:6]
             img_names=train_data.ix[:,0:1]
-            img_names_train, img_names_val, labels_train, labels_val = train_test_split(img_names, labels, random_state=0,train_size=0.7,test_size=0.3)
+            img_names_train, img_names_val, labels_train, labels_val = train_test_split(img_names, labels, random_state=None,train_size=0.85,test_size=0.15)
             self.N=img_names_train.shape[0]
             self.V=img_names_val.shape[0]
             self.img_names_train=np.array(img_names_train).reshape([self.N,1])
@@ -74,7 +74,7 @@ class Flatten(nn.Module):
         return x.view(N, -1)
 
 
-def train(loader_train, model, loss_fn, optimizer, dtype,num_epochs=1, print_every=20):
+def train(loader_train,val_loader, model, loss_fn, optimizer, dtype,num_epochs=1, print_every=20):
     """
     train `model` on data from `loader_train` for one epoch
 
@@ -88,6 +88,7 @@ def train(loader_train, model, loss_fn, optimizer, dtype,num_epochs=1, print_eve
     """
     acc_history = []
     loss_history = []
+    val_acc_history = []
     model.train()
     for i in range(num_epochs):
         for t, (x, y) in enumerate(loader_train):
@@ -108,8 +109,9 @@ def train(loader_train, model, loss_fn, optimizer, dtype,num_epochs=1, print_eve
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
-
-    return loss_history, acc_history
+        val_acc = validate_epoch(model, val_loader, dtype)
+        val_acc_history.append(val_acc)
+    return loss_history, acc_history, val_acc_history
 
 def validate_epoch(model, loader, dtype):
     """
@@ -140,6 +142,7 @@ def validate_epoch(model, loader, dtype):
     return (y_array==y_pred_array).sum()/float(y_pred_array.shape[0])
 
 dtype = torch.cuda.FloatTensor
+#dtype = torch.FloatTensor
 train_csv_path = '../../data/train_face/'
 train_file_name="gender_fex_trset.csv"
 test_csv_path="../../data/test_face/"
@@ -199,9 +202,9 @@ print("defined model")
 model.type(dtype)
 model.train()
 loss_fn = nn.CrossEntropyLoss().type(dtype)
-optimizer = optim.Adam(model.parameters(), lr=2e-6,weight_decay=1)
+optimizer = optim.Adam(model.parameters(), lr=2e-6,weight_decay=0)
 print("start training")
-loss_history,acc_history=train(train_loader, model, loss_fn, optimizer, dtype,num_epochs=40, print_every=17)
+loss_history,acc_history,val_acc_history=train(train_loader,val_loader, model, loss_fn, optimizer, dtype,num_epochs=10, print_every=17)
 
 plt.plot(range(len(loss_history)),loss_history)
 plt.xlabel("iterations")
@@ -213,6 +216,12 @@ plt.plot(range(len(acc_history)),acc_history)
 plt.xlabel("iterations")
 plt.ylabel("accuracy")
 plt.savefig("gender_acc.png")
+plt.gcf().clear()
+
+plt.plot(range(len(val_acc_history)),val_acc_history)
+plt.xlabel("epochs")
+plt.ylabel("val_accuracy")
+plt.savefig("gender_acc_val.png")
 plt.gcf().clear()
 
 torch.save(model.state_dict(), save_model_path)
