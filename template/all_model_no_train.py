@@ -257,7 +257,7 @@ loss_fn = nn.CrossEntropyLoss().type(dtype)
 all_optimizer = optim.Adam(all_model.parameters(), lr=5e-2)
 
 print("start training")
-loss_all_history, loss_gender_history,loss_smile_history, acc_all_history, acc_gender_history,acc_smile_history=all_train(train_loader, all_model,gender_model,smile_model, loss_fn, all_optimizer, dtype,num_epochs=10, print_every=5)
+loss_all_history, loss_gender_history,loss_smile_history, acc_all_history, acc_gender_history,acc_smile_history=all_train(train_loader, all_model,gender_model,smile_model, loss_fn, all_optimizer, dtype,num_epochs=1, print_every=5)
 
 plt.plot(range(len(loss_smile_history)),loss_smile_history)
 plt.xlabel("iterations")
@@ -296,8 +296,8 @@ plt.savefig("all_acc_minus_train.png")
 plt.gcf().clear()
 
 torch.save(all_model.state_dict(), save_model_path)
-torch.save(gender_model.state_dict(), save_gender_model_path)
-torch.save(smile_model.state_dict(), save_smile_model_path)
+#torch.save(gender_model.state_dict(), save_gender_model_path)
+#torch.save(smile_model.state_dict(), save_smile_model_path)
 
 state_all_dict = torch.load(save_model_path)
 all_model.load_state_dict(state_all_dict)
