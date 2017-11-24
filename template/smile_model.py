@@ -72,7 +72,7 @@ class Flatten(nn.Module):
         return x.view(N, -1)
 
 
-def train(loader_train, model, loss_fn, optimizer, dtype,num_epochs=1, print_every=20):
+def train(loader_train,val_loader, model, loss_fn, optimizer, dtype,num_epochs=1, print_every=20):
     """
     train `model` on data from `loader_train` for one epoch
 
@@ -86,6 +86,7 @@ def train(loader_train, model, loss_fn, optimizer, dtype,num_epochs=1, print_eve
     """
     acc_history = []
     loss_history = []
+    val_acc_history=[]
     model.train()
     for i in range(num_epochs):
         for t, (x, y) in enumerate(loader_train):
@@ -106,8 +107,10 @@ def train(loader_train, model, loss_fn, optimizer, dtype,num_epochs=1, print_eve
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
+            val_acc=validate_epoch(model, val_loader, dtype)
+            val_acc_history.append(val_acc)
 
-    return loss_history, acc_history
+    return loss_history, acc_history,val_acc_history
 
 def validate_epoch(model, loader, dtype):
     """
@@ -197,7 +200,7 @@ model.train()
 loss_fn = nn.CrossEntropyLoss().type(dtype)
 optimizer = optim.Adam(model.parameters(), lr=5e-2)
 print("start training")
-loss_history,acc_history=train(train_loader, model, loss_fn, optimizer, dtype,num_epochs=15, print_every=10)
+loss_history,acc_history,val_acc_history=train(train_loader,val_loader, model, loss_fn, optimizer, dtype,num_epochs=1, print_every=10)
 
 plt.plot(range(len(loss_history)),loss_history)
 plt.xlabel("iterations")
@@ -210,6 +213,14 @@ plt.xlabel("iterations")
 plt.ylabel("accuracy")
 plt.savefig("smile_acc.png")
 plt.gcf().clear()
+
+
+plt.plot(range(len(val_acc_history)),val_acc_history)
+plt.xlabel("iterations")
+plt.ylabel("validation accuracy")
+plt.savefig("val_smile_acc.png")
+plt.gcf().clear()
+
 
 torch.save(model.state_dict(), save_model_path)
 state_dict = torch.load(save_model_path)
