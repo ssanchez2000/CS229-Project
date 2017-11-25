@@ -24,7 +24,7 @@ class GenderDataset(Dataset):
         if(mode=="train" or mode=="val"):
             labels=train_data.ix[:,5:6]
             img_names=train_data.ix[:,0:1]
-            img_names_train, img_names_val, labels_train, labels_val = train_test_split(img_names, labels, random_state=None,train_size=0.85,test_size=0.15)
+            img_names_train, img_names_val, labels_train, labels_val = train_test_split(img_names, labels, random_state=7,train_size=0.85,test_size=0.15)
             self.N=img_names_train.shape[0]
             self.V=img_names_val.shape[0]
             self.img_names_train=np.array(img_names_train).reshape([self.N,1])
@@ -203,9 +203,9 @@ print("defined model")
 model.type(dtype)
 model.train()
 loss_fn = nn.CrossEntropyLoss().type(dtype)
-optimizer = optim.Adam(model.parameters(), lr=2e-6,weight_decay=0)
+optimizer = optim.Adam(model.parameters(), lr=1e-5,weight_decay=5e-1)
 print("start training")
-loss_history,acc_history,val_acc_history=train(train_loader,val_loader, model, loss_fn, optimizer, dtype,num_epochs=10, print_every=17)
+loss_history,acc_history,val_acc_history=train(train_loader,val_loader, model, loss_fn, optimizer, dtype,num_epochs=20, print_every=17)
 
 plt.plot(range(len(loss_history)),loss_history)
 plt.xlabel("iterations")
