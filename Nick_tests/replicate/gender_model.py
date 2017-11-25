@@ -188,15 +188,16 @@ model = nn.Sequential(
     nn.BatchNorm2d(16),
     nn.AdaptiveMaxPool2d(128),
     nn.Conv2d(16, 32, kernel_size=3, stride=1),
-     nn.ReLU(inplace=True),
-     nn.BatchNorm2d(32),
-     nn.AdaptiveMaxPool2d(64),
+    nn.ReLU(inplace=True),
+    nn.BatchNorm2d(32),
+    nn.AdaptiveMaxPool2d(64),
     Flatten(),
     nn.Linear(size[1], 512),
     nn.ReLU(inplace=True),
     nn.Linear(512, 512),
     nn.ReLU(inplace=True),
-    nn.Linear(512, 2))
+    nn.Linear(512, 2),
+    nn.Sigmoid())
 print("defined model")
 
 model.type(dtype)
