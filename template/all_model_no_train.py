@@ -73,7 +73,7 @@ class Flatten(nn.Module):
         N, C, H, W = x.size() # read in N, C, H, W
         return x.view(N, -1)
 
-def all_train(loader_train, all_model,gender_model,smile_model, loss_fn, all_optimizer,gender_optimizer,smile_optimizer, dtype,num_epochs=1, print_every=20):
+def all_train(loader_train, all_model,gender_model,smile_model, loss_fn, all_optimizer, dtype,num_epochs=1, print_every=20):
     """
     train `model` on data from `loader_train` for one epoch
 
@@ -132,14 +132,6 @@ def all_train(loader_train, all_model,gender_model,smile_model, loss_fn, all_opt
             acc_all_history.append(acc_all)
             if (t + 1) % print_every == 0:
                 print('t = %d, loss_all = %.4f,loss_gender = %.4f,loss_smile = %.4f, acc_all = %.4f' % (t + 1, loss_all.data[0],loss_gender.data[0],loss_smile.data[0], acc_all))
-
-            gender_optimizer.zero_grad()
-            loss_gender.backward(retain_graph=True)
-            gender_optimizer.step()
-
-            smile_optimizer.zero_grad()
-            loss_smile.backward(retain_graph=True)
-            smile_optimizer.step()
 
             all_optimizer.zero_grad()
             loss_all.backward()
@@ -207,8 +199,8 @@ train_file_name="gender_fex_trset.csv"
 test_csv_path="../data/test_face/"
 test_file_name="gender_fex_valset.csv"
 save_model_path="all_model.pkl"
-save_gender_model_path="all_gender_model.pkl"
-save_smile_model_path="all_smile_model.pkl"
+best_gender_model_path="all_gender_model.pkl"
+best_smile_model_path="all_smile_model.pkl"
 
 
 train_dataset = AllDataset(train_csv_path, train_file_name, dtype,"train")
@@ -246,78 +238,69 @@ nn.Linear(256, size[1]))
 all_model.type(dtype)
 all_model.train()
 print("defined all model")
-
 gender_model= nn.Sequential(
 nn.Linear(size[1], 10),
 nn.ReLU(inplace=True),
 nn.Linear(10, 2))
-gender_model.type(dtype)
-gender_model.train()
-print("defined gender model")
-
 smile_model= nn.Sequential(
 nn.Linear(size[1], 10),
 nn.ReLU(inplace=True),
 nn.Linear(10, 2))
-smile_model.type(dtype)
-smile_model.train()
-print("defined smile model")
+
+state_gender_dict = torch.load(best_gender_model_path)
+gender_model.load_state_dict(state_gender_dict)
+
+state_smile_dict = torch.load(best_smile_model_path)
+smile_model.load_state_dict(state_smile_dict)
 
 loss_fn = nn.CrossEntropyLoss().type(dtype)
 all_optimizer = optim.Adam(all_model.parameters(), lr=5e-2)
-gender_optimizer = optim.Adam(gender_model.parameters(), lr=5e-2)
-smile_optimizer = optim.Adam(smile_model.parameters(), lr=5e-2)
+
 print("start training")
-loss_all_history, loss_gender_history,loss_smile_history, acc_all_history, acc_gender_history,acc_smile_history=all_train(train_loader, all_model,gender_model,smile_model, loss_fn, all_optimizer,gender_optimizer,smile_optimizer, dtype,num_epochs=10, print_every=5)
+loss_all_history, loss_gender_history,loss_smile_history, acc_all_history, acc_gender_history,acc_smile_history=all_train(train_loader, all_model,gender_model,smile_model, loss_fn, all_optimizer, dtype,num_epochs=1, print_every=5)
 
 plt.plot(range(len(loss_smile_history)),loss_smile_history)
 plt.xlabel("iterations")
 plt.ylabel("loss")
-plt.savefig("smile_loss_all.png")
+plt.savefig("smile_loss_all_minus_train.png")
 plt.gcf().clear()
 
 plt.plot(range(len(acc_smile_history)),acc_smile_history)
 plt.xlabel("iterations")
 plt.ylabel("accuracy")
-plt.savefig("smile_acc_all.png")
+plt.savefig("smile_acc_all_minus_train.png")
 plt.gcf().clear()
 
 plt.plot(range(len(loss_gender_history)),loss_gender_history)
 plt.xlabel("iterations")
 plt.ylabel("loss")
-plt.savefig("gender_loss_all.png")
+plt.savefig("gender_loss_all_minus_train.png")
 plt.gcf().clear()
 
 plt.plot(range(len(acc_gender_history)),acc_gender_history)
 plt.xlabel("iterations")
 plt.ylabel("accuracy")
-plt.savefig("gender_acc_all.png")
+plt.savefig("gender_acc_all_minus_train.png")
 plt.gcf().clear()
 
 plt.plot(range(len(loss_all_history)),loss_all_history)
 plt.xlabel("iterations")
 plt.ylabel("loss")
-plt.savefig("all_loss.png")
+plt.savefig("all_loss_minus_train.png")
 plt.gcf().clear()
 
 plt.plot(range(len(acc_all_history)),acc_all_history)
 plt.xlabel("iterations")
 plt.ylabel("accuracy")
-plt.savefig("all_acc.png")
+plt.savefig("all_acc_minus_train.png")
 plt.gcf().clear()
 
 torch.save(all_model.state_dict(), save_model_path)
-torch.save(gender_model.state_dict(), save_gender_model_path)
-torch.save(smile_model.state_dict(), save_smile_model_path)
+#torch.save(gender_model.state_dict(), save_gender_model_path)
+#torch.save(smile_model.state_dict(), save_smile_model_path)
 
 state_all_dict = torch.load(save_model_path)
 all_model.load_state_dict(state_all_dict)
-
-state_gender_dict = torch.load(save_gender_model_path)
-gender_model.load_state_dict(state_gender_dict)
-
-state_smile_dict = torch.load(save_smile_model_path)
-smile_model.load_state_dict(state_smile_dict)
 
 print("model saved and loaded")
 print("start validation")
