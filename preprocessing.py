@@ -16,6 +16,7 @@ else:
     print("Raw Training Test Downloaded\n")
 print("Processing Test Images")
 source_csv_path = "./"
+source_img_path = "./data/smiles_valset/"
 file_name = "gender_fex_valset.csv"
 dest_csv_path = "data/test_face/"
 if not os.path.isdir("./data/test_face"):
@@ -25,7 +26,7 @@ img_names = np.array(train_data.ix[:,0:1])
 copyfile(source_csv_path+file_name, dest_csv_path+file_name)
 
 for img_name in img_names:
-    img = Image.open(source_csv_path+img_name[0])
+    img = Image.open(source_img_path+img_name[0])
     img = img.resize((256,256), Image.ANTIALIAS)
     img.save(dest_csv_path+img_name[0])
 
@@ -36,7 +37,7 @@ for img_name in img_names:
         img = Image.fromarray(img)
         img.save(dest_csv_path+img_name[0])
 
-if os.path.isdir("/data/smiles_trset/"):
+if os.path.isdir("./data/smiles_trset/"):
     print("You already have raw training images, so I'm using those\n")
 else:
     print("Downloading Raw Training Images\n")
@@ -44,6 +45,7 @@ else:
     print("Raw Training Training Downloaded\n")
 print("Processing Training Images")
 source_csv_path = "./"
+source_img_path = "./data/smiles_trset/"
 file_name = "gender_fex_trset.csv"
 dest_csv_path = "data/train_face/"
 if not os.path.isdir("./data/train_face"):
@@ -53,7 +55,7 @@ img_names = np.array(train_data.ix[:,0:1])
 copyfile(source_csv_path+file_name, dest_csv_path+file_name)
 
 for img_name in img_names:
-    img = Image.open(source_csv_path+img_name[0])
+    img = Image.open(source_img_path+img_name[0])
     img = img.resize((256,256), Image.ANTIALIAS)
     img.save(dest_csv_path+img_name[0])
 
