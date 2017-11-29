@@ -143,9 +143,9 @@ def validate_epoch(model, loader, dtype):
     return (y_array==y_pred_array).sum()/float(y_pred_array.shape[0])
 
 dtype = torch.cuda.FloatTensor
-train_csv_path = '../data/train_face/'
+train_csv_path = '../../data/train_face/'
 train_file_name="gender_fex_trset.csv"
-test_csv_path="../data/test_face/"
+test_csv_path="../../data/test_face/"
 test_file_name="gender_fex_valset.csv"
 save_model_path="smile_model.pkl"
 

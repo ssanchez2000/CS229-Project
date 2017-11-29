@@ -107,7 +107,7 @@ def train(loader_train,val_loader, model, loss_fn, optimizer, dtype,num_epochs=1
 
             if (t + 1) % print_every == 0:
                 print('t = %d, loss = %.4f, acc = %.4f' % (t + 1, loss.data[0], acc))
-	
+
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
@@ -209,7 +209,7 @@ loss_fn = nn.CrossEntropyLoss().type(dtype)
 optimizer = optim.Adam(model.parameters(), lr=1e-5,weight_decay=5e-1)
 print("start training")
 
-loss_history,acc_history,val_acc_history=train(train_loader,val_loader, model, loss_fn, optimizer, dtype,num_epochs=1, print_every=4)
+loss_history,acc_history,val_acc_history=train(train_loader,val_loader, model, loss_fn, optimizer, dtype,num_epochs=15, print_every=4)
 
 plt.plot(range(len(loss_history)),loss_history)
 plt.xlabel("iterations")
