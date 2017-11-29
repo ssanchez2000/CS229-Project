@@ -107,14 +107,14 @@ def train(loader_train,val_loader, model, loss_fn, optimizer, dtype,num_epochs=1
 
             if (t + 1) % print_every == 0:
                 print('t = %d, loss = %.4f, acc = %.4f' % (t + 1, loss.data[0], acc))
-		val_acc=validate_epoch(model, val_loader, dtype)
-           	val_acc_history.append(val_acc)
+		#val_acc=validate_epoch(model, val_loader, dtype)
+           	#val_acc_history.append(val_acc)
 
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
-            #val_acc=validate_epoch(model, val_loader, dtype)
-            #val_acc_history.append(val_acc)
+            val_acc=validate_epoch(model, val_loader, dtype)
+            val_acc_history.append(val_acc)
 
     return loss_history, acc_history,val_acc_history
 
