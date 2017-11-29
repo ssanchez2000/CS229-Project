@@ -105,8 +105,7 @@ def train(loader_train,val_loader, model, loss_fn, optimizer, dtype,num_epochs=1
 
             if (t + 1) % print_every == 0:
                 print('t = %d, loss = %.4f, acc = %.4f' % (t + 1, loss.data[0], acc))
-		#val_acc=validate_epoch(model, val_loader, dtype)
-            	#val_acc_history.append(val_acc)
+
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
@@ -163,14 +162,18 @@ test_dataset = SmileDataset(test_csv_path, test_file_name, dtype,"test")
 test_loader = DataLoader(test_dataset,batch_size=256,shuffle=True)
 print("loaded data")
 temp_model=nn.Sequential(
-    #nn.Conv2d(4, 16, kernel_size=3, stride=1),
-    #nn.ReLU(inplace=True),
-    #nn.BatchNorm2d(16),
-    #nn.AdaptiveMaxPool2d(64),
-    #nn.Conv2d(16, 32, kernel_size=3, stride=1),
-    #nn.ReLU(inplace=True),
-    #nn.BatchNorm2d(32),
-    #nn.AdaptiveMaxPool2d(16),
+    nn.Conv2d(3, 96, kernel_size=7, stride=4, padding=0),
+    nn.ReLU(inplace=True),
+    nn.AdaptiveMaxPool2d(28),
+    nn.BatchNorm2d(96),
+    nn.Conv2d(96, 256, kernel_size=5, stride=1,padding=2),
+    nn.ReLU(inplace=True),
+    nn.AdaptiveMaxPool2d(14),
+    nn.BatchNorm2d(256),
+    nn.Conv2d(256, 256, kernel_size=3, stride=1,padding=1),
+    nn.ReLU(inplace=True),
+    nn.AdaptiveMaxPool2d(7),
+    nn.BatchNorm2d(256),
     Flatten())
 
 temp_model = temp_model.type(dtype)
@@ -184,24 +187,32 @@ for t, (x, y) in enumerate(train_loader):
         break
 
 model = nn.Sequential(
-#nn.Conv2d(4, 16, kernel_size=3, stride=1),
-#nn.ReLU(inplace=True),
-#nn.BatchNorm2d(16),
-#nn.AdaptiveMaxPool2d(128),
-#nn.Conv2d(16, 32, kernel_size=3, stride=1),
-#nn.ReLU(inplace=True),
-#nn.BatchNorm2d(32),
-#nn.AdaptiveMaxPool2d(64),
-Flatten(),
-nn.Linear(size[1], 1024),
-nn.ReLU(inplace=True),
-nn.Linear(1024, 2))
+    nn.Conv2d(3, 96, kernel_size=7, stride=4, padding=0),
+    nn.ReLU(inplace=True),
+    nn.AdaptiveMaxPool2d(28),
+    nn.BatchNorm2d(96),
+    nn.Conv2d(96, 256, kernel_size=5, stride=1, padding=2),
+    nn.ReLU(inplace=True),
+    nn.AdaptiveMaxPool2d(14),
+    nn.BatchNorm2d(256),
+    nn.Conv2d(256, 256, kernel_size=3, stride=1, padding=1),
+    nn.ReLU(inplace=True),
+    nn.AdaptiveMaxPool2d(7),
+    nn.BatchNorm2d(256),
+    Flatten(),
+    nn.Linear(size[1], 512),
+    nn.ReLU(inplace=True),
+    nn.Dropout(p=0.05),
+    nn.Linear(512, 512),
+    nn.ReLU(inplace=True),
+    nn.Dropout(p=0.05),
+    nn.Linear(512, 2))
 print("defined model")
 
 model.type(dtype)
 model.train()
 loss_fn = nn.CrossEntropyLoss().type(dtype)
-optimizer = optim.Adam(model.parameters(), lr=5e-2)
+optimizer = optim.Adam(model.parameters(), lr=5e-2,weight_decay=0)
 print("start training")
 loss_history,acc_history,val_acc_history=train(train_loader,val_loader, model, loss_fn, optimizer, dtype,num_epochs=1, print_every=4)
 
