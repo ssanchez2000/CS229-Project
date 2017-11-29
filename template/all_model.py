@@ -10,6 +10,8 @@ import numpy
 from PIL import Image
 import pandas as pd
 from sklearn.model_selection import train_test_split
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 class AllDataset(Dataset):
 
@@ -201,7 +203,7 @@ def validate(all_model,gender_model,smile_model, loader, dtype):
 
     return acc_all,acc_gender,acc_smile
 
-dtype = torch.FloatTensor
+dtype = torch.cuda.FloatTensor
 train_csv_path = '../data/train_face/'
 train_file_name="gender_fex_trset.csv"
 test_csv_path="../data/test_face/"
@@ -268,7 +270,7 @@ all_optimizer = optim.Adam(all_model.parameters(), lr=5e-2)
 gender_optimizer = optim.Adam(gender_model.parameters(), lr=5e-2)
 smile_optimizer = optim.Adam(smile_model.parameters(), lr=5e-2)
 print("start training")
-loss_all_history, loss_gender_history,loss_smile_history, acc_all_history, acc_gender_history,acc_smile_history=all_train(train_loader, all_model,gender_model,smile_model, loss_fn, all_optimizer,gender_optimizer,smile_optimizer, dtype,num_epochs=10, print_every=5)
+loss_all_history, loss_gender_history,loss_smile_history, acc_all_history, acc_gender_history,acc_smile_history=all_train(train_loader, all_model,gender_model,smile_model, loss_fn, all_optimizer,gender_optimizer,smile_optimizer, dtype,num_epochs=1, print_every=5)
 
 plt.plot(range(len(loss_smile_history)),loss_smile_history)
 plt.xlabel("iterations")

@@ -10,6 +10,8 @@ import numpy
 from PIL import Image
 import pandas as pd
 from sklearn.model_selection import train_test_split
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 class SmileDataset(Dataset):
 
@@ -97,18 +99,19 @@ def train(loader_train,val_loader, model, loss_fn, optimizer, dtype,num_epochs=1
             loss = loss_fn(scores, y_var)
             loss_history.append(loss.data[0])
 
-            y_pred = scores.data.max(1)[1].numpy()
-            acc = (y_var.data.numpy()==y_pred).sum()/float(y_pred.shape[0])
+            y_pred = scores.data.max(1)[1].cpu().numpy()
+            acc = (y_var.data.cpu().numpy()==y_pred).sum()/float(y_pred.shape[0])
             acc_history.append(acc)
 
             if (t + 1) % print_every == 0:
                 print('t = %d, loss = %.4f, acc = %.4f' % (t + 1, loss.data[0], acc))
-
+		val_acc=validate_epoch(model, val_loader, dtype)
+            	val_acc_history.append(val_acc)
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
-            val_acc=validate_epoch(model, val_loader, dtype)
-            val_acc_history.append(val_acc)
+            #val_acc=validate_epoch(model, val_loader, dtype)
+            #val_acc_history.append(val_acc)
 
     return loss_history, acc_history,val_acc_history
 
@@ -133,14 +136,14 @@ def validate_epoch(model, loader, dtype):
         y_var = Variable(y.type(dtype).long())
         y_var=y_var.view(y_var.data.shape[0])
         scores = model(x_var)
-        y_pred = scores.data.max(1)[1].numpy()
+        y_pred = scores.data.max(1)[1].cpu().numpy()
 
-        y_array[i*bs:(i+1)*bs] = y_var.data.numpy()
+        y_array[i*bs:(i+1)*bs] = y_var.data.cpu().numpy()
         y_pred_array[i*bs:(i+1)*bs] = y_pred
 
     return (y_array==y_pred_array).sum()/float(y_pred_array.shape[0])
 
-dtype = torch.FloatTensor
+dtype = torch.cuda.FloatTensor
 train_csv_path = '../data/train_face/'
 train_file_name="gender_fex_trset.csv"
 test_csv_path="../data/test_face/"
@@ -200,7 +203,7 @@ model.train()
 loss_fn = nn.CrossEntropyLoss().type(dtype)
 optimizer = optim.Adam(model.parameters(), lr=5e-2)
 print("start training")
-loss_history,acc_history,val_acc_history=train(train_loader,val_loader, model, loss_fn, optimizer, dtype,num_epochs=1, print_every=10)
+loss_history,acc_history,val_acc_history=train(train_loader,val_loader, model, loss_fn, optimizer, dtype,num_epochs=1, print_every=4)
 
 plt.plot(range(len(loss_history)),loss_history)
 plt.xlabel("iterations")
