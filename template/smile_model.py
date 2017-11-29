@@ -91,6 +91,7 @@ def train(loader_train,val_loader, model, loss_fn, optimizer, dtype,num_epochs=1
     val_acc_history=[]
     model.train()
     for i in range(num_epochs):
+	print(i)
         for t, (x, y) in enumerate(loader_train):
             x_var = Variable(x.type(dtype))
             y_var = Variable(y.type(dtype).long())
