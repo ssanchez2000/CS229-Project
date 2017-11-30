@@ -146,9 +146,9 @@ def validate_epoch(model, loader, dtype):
 
 dtype = torch.cuda.FloatTensor
 
-train_csv_path = '../data/train_face/'
+train_csv_path = '../../data/train_face/'
 train_file_name="gender_fex_trset.csv"
-test_csv_path="../data/test_face/"
+test_csv_path="../../data/test_face/"
 test_file_name="gender_fex_valset.csv"
 save_model_path="gender_model.pkl"
 
@@ -208,9 +208,10 @@ model.train()
 loss_fn = nn.CrossEntropyLoss().type(dtype)
 LR = [1e-2,1e-5,1e-6,1e-9]
 dfs=[]
+Lambda = 0
 for i in range(len(LR)):
 	#optimizer = optim.Adam(model.parameters(), lr=1e-5,weight_decay=5e-1)
-	optimizer = optim.Adam(model.parameters(), lr=LR[i],weight_decay=5e-1)
+	optimizer = optim.Adam(model.parameters(), lr=LR[i],weight_decay=Lambda)
 	print("start training")
     
 	loss_history,acc_history,val_acc_history=train(train_loader,val_loader, model, loss_fn, optimizer, dtype,num_epochs=1, print_every=4)
@@ -242,7 +243,7 @@ for i in range(len(LR)):
 	print("start validation")
 	val_acc=validate_epoch(model, val_loader, dtype)
 	#print(val_acc)
-	dict= {'1_lambda':Lambda,'2_alpha':alpha,'3_acc_hist':a,'4_loss_hist':b,'5_val_acc_hist':d}
+	dict= {'1_lambda':Lambda,'2_alpha':LR[i],'3_acc_hist':acc_history,'4_loss_hist':loss_history,'5_val_acc_hist':val_acc_history}
 	df = pd.DataFrame(dict)
 	dfs.append(df)
 	
