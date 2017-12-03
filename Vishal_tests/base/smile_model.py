@@ -23,7 +23,7 @@ class SmileDataset(Dataset):
         if(mode=="train" or mode=="val"):
             labels=train_data.ix[:,6:7]
             img_names=train_data.ix[:,0:1]
-            img_names_train, img_names_val, labels_train, labels_val = train_test_split(img_names, labels, random_state=0,train_size=0.7,test_size=0.3)
+            img_names_train, img_names_val, labels_train, labels_val = train_test_split(img_names, labels, random_state=0,train_size=0.85,test_size=0.15)
             self.N=img_names_train.shape[0]
             self.V=img_names_val.shape[0]
             self.img_names_train=np.array(img_names_train).reshape([self.N,1])
@@ -162,18 +162,30 @@ test_dataset = SmileDataset(test_csv_path, test_file_name, dtype,"test")
 test_loader = DataLoader(test_dataset,batch_size=256,shuffle=True)
 print("loaded data")
 temp_model=nn.Sequential(
-    nn.Conv2d(3, 96, kernel_size=7, stride=4, padding=0),
+    nn.Conv2d(3, 16, kernel_size=3, stride=1),
     nn.ReLU(inplace=True),
-    nn.AdaptiveMaxPool2d(28),
-    nn.BatchNorm2d(96),
-    nn.Conv2d(96, 256, kernel_size=5, stride=1,padding=2),
+    nn.BatchNorm2d(16),
+    nn.Conv2d(16, 16, kernel_size=3, stride=1),
     nn.ReLU(inplace=True),
-    nn.AdaptiveMaxPool2d(14),
-    nn.BatchNorm2d(256),
-    nn.Conv2d(256, 256, kernel_size=3, stride=1,padding=1),
+    nn.BatchNorm2d(16),
+    nn.AdaptiveMaxPool2d(128),
+    ## 128x128
+    nn.Conv2d(16, 32, kernel_size=3, stride=1),
     nn.ReLU(inplace=True),
-    nn.AdaptiveMaxPool2d(7),
-    nn.BatchNorm2d(256),
+    nn.BatchNorm2d(32),
+    nn.Conv2d(32, 32, kernel_size=3, stride=1),
+    nn.ReLU(inplace=True),
+    nn.BatchNorm2d(32),
+    nn.AdaptiveMaxPool2d(64),
+    ## 64x64
+    nn.Conv2d(32, 64, kernel_size=3, stride=1),
+    nn.ReLU(inplace=True),
+    nn.BatchNorm2d(64),
+    nn.Conv2d(64, 64, kernel_size=3, stride=1),
+    nn.ReLU(inplace=True),
+    nn.BatchNorm2d(64),
+    nn.AdaptiveMaxPool2d(32),
+    ## 32x32
     Flatten())
 
 temp_model = temp_model.type(dtype)
@@ -187,26 +199,37 @@ for t, (x, y) in enumerate(train_loader):
         break
 
 model = nn.Sequential(
-    nn.Conv2d(3, 96, kernel_size=7, stride=4, padding=0),
+    nn.Conv2d(3, 16, kernel_size=3, stride=1),
     nn.ReLU(inplace=True),
-    nn.AdaptiveMaxPool2d(28),
-    nn.BatchNorm2d(96),
-    nn.Conv2d(96, 256, kernel_size=5, stride=1, padding=2),
+    nn.BatchNorm2d(16),
+    nn.Conv2d(16, 16, kernel_size=3, stride=1),
     nn.ReLU(inplace=True),
-    nn.AdaptiveMaxPool2d(14),
-    nn.BatchNorm2d(256),
-    nn.Conv2d(256, 256, kernel_size=3, stride=1, padding=1),
+    nn.BatchNorm2d(16),
+    nn.AdaptiveMaxPool2d(128),
+    ## 128x128
+    nn.Conv2d(16, 32, kernel_size=3, stride=1),
     nn.ReLU(inplace=True),
-    nn.AdaptiveMaxPool2d(7),
-    nn.BatchNorm2d(256),
+    nn.BatchNorm2d(32),
+    nn.Conv2d(32, 32, kernel_size=3, stride=1),
+    nn.ReLU(inplace=True),
+    nn.BatchNorm2d(32),
+    nn.AdaptiveMaxPool2d(64),
+    ## 64x64
+    nn.Conv2d(32, 64, kernel_size=3, stride=1),
+    nn.ReLU(inplace=True),
+    nn.BatchNorm2d(64),
+    nn.Conv2d(64, 64, kernel_size=3, stride=1),
+    nn.ReLU(inplace=True),
+    nn.BatchNorm2d(64),
+    nn.AdaptiveMaxPool2d(32),
+    ## 32x32
     Flatten(),
-    nn.Linear(size[1], 512),
+    nn.Linear(size, 4096),
     nn.ReLU(inplace=True),
-    nn.Dropout(p=0.05),
-    nn.Linear(512, 512),
+    nn.Linear(4096,1024),
     nn.ReLU(inplace=True),
-    nn.Dropout(p=0.05),
-    nn.Linear(512, 2))
+    nn.Linear(1024,2),
+    nn.Softmax())
 print("defined model")
 
 model.type(dtype)
