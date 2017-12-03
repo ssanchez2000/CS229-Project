@@ -151,15 +151,15 @@ save_model_path="smile_model.pkl"
 
 train_dataset = SmileDataset(train_csv_path, train_file_name, dtype,"train")
 ## loader
-train_loader = DataLoader(train_dataset,batch_size=256,shuffle=True)
+train_loader = DataLoader(train_dataset,batch_size=64,shuffle=True)
 
 val_dataset = SmileDataset(train_csv_path, train_file_name, dtype,"val")
 ## loader
-val_loader = DataLoader(val_dataset,batch_size=256,shuffle=True)
+val_loader = DataLoader(val_dataset,batch_size=64,shuffle=True)
 
 test_dataset = SmileDataset(test_csv_path, test_file_name, dtype,"test")
 ## loader
-test_loader = DataLoader(test_dataset,batch_size=256,shuffle=True)
+test_loader = DataLoader(test_dataset,batch_size=64,shuffle=True)
 print("loaded data")
 temp_model=nn.Sequential(
     nn.Conv2d(3, 16, kernel_size=3, stride=1),
@@ -217,36 +217,23 @@ model = nn.Sequential(
     ## 64x64
     nn.Conv2d(32, 64, kernel_size=3, stride=1),
     nn.ReLU(inplace=True),
-<<<<<<< HEAD
-    nn.AdaptiveMaxPool2d(14),
-    nn.BatchNorm2d(256),
-    nn.Conv2d(256, 512, kernel_size=3, stride=1, padding=1),
+    nn.AdaptiveMaxPool2d(64),
+    nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1),
     nn.ReLU(inplace=True),
-    nn.AdaptiveMaxPool2d(7),
-    nn.BatchNorm2d(512),
-=======
     nn.BatchNorm2d(64),
     nn.Conv2d(64, 64, kernel_size=3, stride=1),
     nn.ReLU(inplace=True),
     nn.BatchNorm2d(64),
     nn.AdaptiveMaxPool2d(32),
     ## 32x32
->>>>>>> f54f4ace99c8c3ace3633f063e94d869ab3e3b71
     Flatten(),
-    nn.Linear(size, 4096),
+    nn.Linear(size[1], 4096),
     nn.ReLU(inplace=True),
-<<<<<<< HEAD
-    nn.Dropout(p=0.05),
-    nn.Linear(512, 128),
-    nn.ReLU(inplace=True),
-    nn.Dropout(p=0.05),
-    nn.Linear(128, 2))
-=======
     nn.Linear(4096,1024),
     nn.ReLU(inplace=True),
     nn.Linear(1024,2),
     nn.Softmax())
->>>>>>> f54f4ace99c8c3ace3633f063e94d869ab3e3b71
+
 print("defined model")
 
 model.type(dtype)
