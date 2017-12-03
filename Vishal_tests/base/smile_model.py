@@ -195,18 +195,18 @@ model = nn.Sequential(
     nn.ReLU(inplace=True),
     nn.AdaptiveMaxPool2d(14),
     nn.BatchNorm2d(256),
-    nn.Conv2d(256, 256, kernel_size=3, stride=1, padding=1),
+    nn.Conv2d(256, 512, kernel_size=3, stride=1, padding=1),
     nn.ReLU(inplace=True),
     nn.AdaptiveMaxPool2d(7),
-    nn.BatchNorm2d(256),
+    nn.BatchNorm2d(512),
     Flatten(),
     nn.Linear(size[1], 512),
     nn.ReLU(inplace=True),
     nn.Dropout(p=0.05),
-    nn.Linear(512, 512),
+    nn.Linear(512, 128),
     nn.ReLU(inplace=True),
     nn.Dropout(p=0.05),
-    nn.Linear(512, 2))
+    nn.Linear(128, 2))
 print("defined model")
 
 model.type(dtype)
@@ -214,7 +214,7 @@ model.train()
 loss_fn = nn.CrossEntropyLoss().type(dtype)
 optimizer = optim.Adam(model.parameters(), lr=5e-5,weight_decay=0)
 print("start training")
-loss_history,acc_history,val_acc_history=train(train_loader,val_loader, model, loss_fn, optimizer, dtype,num_epochs=1, print_every=4)
+loss_history,acc_history,val_acc_history=train(train_loader,val_loader, model, loss_fn, optimizer, dtype,num_epochs=15, print_every=4)
 
 plt.plot(range(len(loss_history)),loss_history)
 plt.xlabel("iterations")
