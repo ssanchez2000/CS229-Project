@@ -105,13 +105,12 @@ def train(loader_train,val_loader, model, loss_fn, optimizer, dtype,num_epochs=1
 
             if (t + 1) % print_every == 0:
                 print('t = %d, loss = %.4f, acc = %.4f' % (t + 1, loss.data[0], acc))
+                val_acc=validate_epoch(model, val_loader, dtype)
+                val_acc_history.append(val_acc)
 
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
-            val_acc=validate_epoch(model, val_loader, dtype)
-            val_acc_history.append(val_acc)
-
     return loss_history, acc_history,val_acc_history
 
 def validate_epoch(model, loader, dtype):
@@ -151,15 +150,15 @@ save_model_path="smile_model.pkl"
 
 train_dataset = SmileDataset(train_csv_path, train_file_name, dtype,"train")
 ## loader
-train_loader = DataLoader(train_dataset,batch_size=256,shuffle=True)
+train_loader = DataLoader(train_dataset,batch_size=64,shuffle=True)
 
 val_dataset = SmileDataset(train_csv_path, train_file_name, dtype,"val")
 ## loader
-val_loader = DataLoader(val_dataset,batch_size=256,shuffle=True)
+val_loader = DataLoader(val_dataset,batch_size=64,shuffle=True)
 
 test_dataset = SmileDataset(test_csv_path, test_file_name, dtype,"test")
 ## loader
-test_loader = DataLoader(test_dataset,batch_size=256,shuffle=True)
+test_loader = DataLoader(test_dataset,batch_size=64,shuffle=True)
 print("loaded data")
 temp_model=nn.Sequential(
     nn.Conv2d(3, 16, kernel_size=3, stride=1),
@@ -217,6 +216,9 @@ model = nn.Sequential(
     ## 64x64
     nn.Conv2d(32, 64, kernel_size=3, stride=1),
     nn.ReLU(inplace=True),
+    nn.AdaptiveMaxPool2d(64),
+    nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1),
+    nn.ReLU(inplace=True),
     nn.BatchNorm2d(64),
     nn.Conv2d(64, 64, kernel_size=3, stride=1),
     nn.ReLU(inplace=True),
@@ -224,20 +226,21 @@ model = nn.Sequential(
     nn.AdaptiveMaxPool2d(32),
     ## 32x32
     Flatten(),
-    nn.Linear(size, 4096),
+    nn.Linear(size[1], 4096),
     nn.ReLU(inplace=True),
     nn.Linear(4096,1024),
     nn.ReLU(inplace=True),
     nn.Linear(1024,2),
     nn.Softmax())
+
 print("defined model")
 
 model.type(dtype)
 model.train()
 loss_fn = nn.CrossEntropyLoss().type(dtype)
-optimizer = optim.Adam(model.parameters(), lr=5e-5,weight_decay=0)
+optimizer = optim.Adam(model.parameters(), lr=5e-4,weight_decay=0)
 print("start training")
-loss_history,acc_history,val_acc_history=train(train_loader,val_loader, model, loss_fn, optimizer, dtype,num_epochs=1, print_every=4)
+loss_history,acc_history,val_acc_history=train(train_loader,val_loader, model, loss_fn, optimizer, dtype,num_epochs=15, print_every=10)
 
 plt.plot(range(len(loss_history)),loss_history)
 plt.xlabel("iterations")
