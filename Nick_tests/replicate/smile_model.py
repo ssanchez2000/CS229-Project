@@ -10,7 +10,9 @@ import numpy
 from PIL import Image
 import pandas as pd
 from sklearn.model_selection import train_test_split
-
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 class SmileDataset(Dataset):
 
     def __init__(self,csv_path,file_name,dtype,mode):
@@ -21,7 +23,7 @@ class SmileDataset(Dataset):
         if(mode=="train" or mode=="val"):
             labels=train_data.ix[:,6:7]
             img_names=train_data.ix[:,0:1]
-            img_names_train, img_names_val, labels_train, labels_val = train_test_split(img_names, labels, random_state=0,train_size=0.7,test_size=0.3)
+            img_names_train, img_names_val, labels_train, labels_val = train_test_split(img_names, labels, random_state=0,train_size=0.85,test_size=0.15)
             self.N=img_names_train.shape[0]
             self.V=img_names_val.shape[0]
             self.img_names_train=np.array(img_names_train).reshape([self.N,1])
@@ -53,7 +55,7 @@ class SmileDataset(Dataset):
         if(self.mode=="test"):
             label=torch.from_numpy(self.labels_test[index]).type(self.dtype)
             img_name=self.img_names_test[index]
-            img=np.array(Image.open(self.csv_path+img_name[0])).T
+            img=np.array(Image.open(self.csv_path+img_name)).T
             img=torch.from_numpy(img).type(self.dtype)
             return img,label
 
@@ -65,13 +67,14 @@ class SmileDataset(Dataset):
         if(self.mode=="test"):
             return self.T
 
+
 class Flatten(nn.Module):
     def forward(self, x):
         N, C, H, W = x.size() # read in N, C, H, W
         return x.view(N, -1)
 
 
-def train(loader_train, model, loss_fn, optimizer, dtype,num_epochs=1, print_every=20):
+def train(loader_train,val_loader, model, loss_fn, optimizer, dtype,num_epochs=1, print_every=20):
     """
     train `model` on data from `loader_train` for one epoch
 
@@ -85,8 +88,14 @@ def train(loader_train, model, loss_fn, optimizer, dtype,num_epochs=1, print_eve
     """
     acc_history = []
     loss_history = []
+    val_acc_history=[]
     model.train()
     for i in range(num_epochs):
+        if((i+1)%10==0):
+            for param_group in optimizer.param_groups:
+               lr=param_group['lr']
+               param_group['lr'] = lr/2.0
+
         for t, (x, y) in enumerate(loader_train):
             x_var = Variable(x.type(dtype))
             y_var = Variable(y.type(dtype).long())
@@ -101,12 +110,13 @@ def train(loader_train, model, loss_fn, optimizer, dtype,num_epochs=1, print_eve
 
             if (t + 1) % print_every == 0:
                 print('t = %d, loss = %.4f, acc = %.4f' % (t + 1, loss.data[0], acc))
+                val_acc=validate_epoch(model, val_loader, dtype)
+                val_acc_history.append(val_acc)
 
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
-
-    return loss_history, acc_history
+    return loss_history, acc_history,val_acc_history
 
 def validate_epoch(model, loader, dtype):
     """
@@ -142,32 +152,44 @@ train_file_name="gender_fex_trset.csv"
 test_csv_path="../../data/test_face/"
 test_file_name="gender_fex_valset.csv"
 save_model_path="smile_model.pkl"
+
 train_dataset = SmileDataset(train_csv_path, train_file_name, dtype,"train")
 ## loader
-train_loader = DataLoader(train_dataset,batch_size=256,shuffle=True)
+train_loader = DataLoader(train_dataset,batch_size=64,shuffle=True)
 
 val_dataset = SmileDataset(train_csv_path, train_file_name, dtype,"val")
 ## loader
-val_loader = DataLoader(val_dataset,batch_size=256,shuffle=True)
+val_loader = DataLoader(val_dataset,batch_size=64,shuffle=True)
 
 test_dataset = SmileDataset(test_csv_path, test_file_name, dtype,"test")
 ## loader
-test_loader = DataLoader(test_dataset,batch_size=256,shuffle=True)
+test_loader = DataLoader(test_dataset,batch_size=64,shuffle=True)
 print("loaded data")
-
 temp_model=nn.Sequential(
-    nn.Conv2d(3, 96, kernel_size=7, stride=4, padding=0),
+    nn.Conv2d(3, 16, kernel_size=3, stride=1),
     nn.ReLU(inplace=True),
-    nn.AdaptiveMaxPool2d(28),
-    nn.BatchNorm2d(96),
-    nn.Conv2d(96, 256, kernel_size=5, stride=1,padding=2),
+    nn.BatchNorm2d(16),
+    nn.Conv2d(16, 16, kernel_size=3, stride=1),
     nn.ReLU(inplace=True),
-    nn.AdaptiveMaxPool2d(14),
-    nn.BatchNorm2d(256),
-    nn.Conv2d(256, 256, kernel_size=3, stride=1,padding=1),
+    nn.BatchNorm2d(16),
+    nn.AdaptiveMaxPool2d(128),
+    ## 128x128
+    nn.Conv2d(16, 32, kernel_size=3, stride=1),
     nn.ReLU(inplace=True),
-    nn.AdaptiveMaxPool2d(7),
-    nn.BatchNorm2d(256),
+    nn.BatchNorm2d(32),
+    nn.Conv2d(32, 32, kernel_size=3, stride=1),
+    nn.ReLU(inplace=True),
+    nn.BatchNorm2d(32),
+    nn.AdaptiveMaxPool2d(64),
+    ## 64x64
+    nn.Conv2d(32, 64, kernel_size=3, stride=1),
+    nn.ReLU(inplace=True),
+    nn.BatchNorm2d(64),
+    nn.Conv2d(64, 64, kernel_size=3, stride=1),
+    nn.ReLU(inplace=True),
+    nn.BatchNorm2d(64),
+    nn.AdaptiveMaxPool2d(32),
+    ## 32x32
     Flatten())
 
 temp_model = temp_model.type(dtype)
@@ -181,34 +203,69 @@ for t, (x, y) in enumerate(train_loader):
         break
 
 model = nn.Sequential(
-    nn.Conv2d(3, 96, kernel_size=7, stride=4, padding=0),
+    nn.Conv2d(3, 16, kernel_size=3, stride=1),
     nn.ReLU(inplace=True),
-    nn.AdaptiveMaxPool2d(28),
-    nn.BatchNorm2d(96),
-    nn.Conv2d(96, 256, kernel_size=5, stride=1, padding=2),
+    nn.BatchNorm2d(16),
+    nn.Conv2d(16, 16, kernel_size=3, stride=1),
     nn.ReLU(inplace=True),
-    nn.AdaptiveMaxPool2d(14),
-    nn.BatchNorm2d(256),
-    nn.Conv2d(256, 256, kernel_size=3, stride=1, padding=1),
+    nn.BatchNorm2d(16),
+    nn.AdaptiveMaxPool2d(128),
+    ## 128x128
+    nn.Conv2d(16, 32, kernel_size=3, stride=1),
     nn.ReLU(inplace=True),
-    nn.AdaptiveMaxPool2d(7),
-    nn.BatchNorm2d(256),
+    nn.BatchNorm2d(32),
+    nn.Conv2d(32, 32, kernel_size=3, stride=1),
+    nn.ReLU(inplace=True),
+    nn.BatchNorm2d(32),
+    nn.AdaptiveMaxPool2d(64),
+    ## 64x64
+    nn.Conv2d(32, 64, kernel_size=3, stride=1),
+    nn.ReLU(inplace=True),
+    nn.AdaptiveMaxPool2d(64),
+    nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1),
+    nn.ReLU(inplace=True),
+    nn.BatchNorm2d(64),
+    nn.Conv2d(64, 64, kernel_size=3, stride=1),
+    nn.ReLU(inplace=True),
+    nn.BatchNorm2d(64),
+    nn.AdaptiveMaxPool2d(32),
+    ## 32x32
     Flatten(),
-    nn.Linear(size[1], 512),
+    nn.Linear(size[1], 4096),
     nn.ReLU(inplace=True),
-    nn.Dropout(p=0.05),
-    nn.Linear(512, 512),
+    nn.Linear(4096,1024),
     nn.ReLU(inplace=True),
-    nn.Dropout(p=0.05),
-    nn.Linear(512, 2))
+    nn.Linear(1024,2),
+    nn.Softmax())
+
 print("defined model")
 
 model.type(dtype)
 model.train()
 loss_fn = nn.CrossEntropyLoss().type(dtype)
-optimizer = optim.Adam(model.parameters(), lr=5e-2)
+optimizer = optim.Adam(model.parameters(), lr=5e-5,weight_decay=0)
 print("start training")
-loss_history,acc_history=train(train_loader, model, loss_fn, optimizer, dtype,num_epochs=1, print_every=10)
+loss_history,acc_history,val_acc_history=train(train_loader,val_loader, model, loss_fn, optimizer, dtype,num_epochs=25, print_every=10)
+
+plt.plot(range(len(loss_history)),loss_history)
+plt.xlabel("iterations")
+plt.ylabel("loss")
+plt.savefig("smile_loss.png")
+plt.gcf().clear()
+
+plt.plot(range(len(acc_history)),acc_history)
+plt.xlabel("iterations")
+plt.ylabel("accuracy")
+plt.savefig("smile_acc.png")
+plt.gcf().clear()
+
+
+plt.plot(range(len(val_acc_history)),val_acc_history)
+plt.xlabel("iterations")
+plt.ylabel("validation accuracy")
+plt.savefig("val_smile_acc.png")
+plt.gcf().clear()
+
 
 torch.save(model.state_dict(), save_model_path)
 state_dict = torch.load(save_model_path)
