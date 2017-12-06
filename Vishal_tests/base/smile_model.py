@@ -91,6 +91,11 @@ def train(loader_train,val_loader, model, loss_fn, optimizer, dtype,num_epochs=1
     val_acc_history=[]
     model.train()
     for i in range(num_epochs):
+	if((i+1)%10==0):
+	     lr=param_group['lr']
+             param_group['lr'] = lr/2.0
+	for param_group in optimizer.param_groups:
+		
         for t, (x, y) in enumerate(loader_train):
             x_var = Variable(x.type(dtype))
             y_var = Variable(y.type(dtype).long())
