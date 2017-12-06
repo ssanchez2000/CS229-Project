@@ -222,9 +222,6 @@ model = nn.Sequential(
     nn.Conv2d(32, 64, kernel_size=3, stride=1),
     nn.ReLU(inplace=True),
     nn.AdaptiveMaxPool2d(64),
-    nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1),
-    nn.ReLU(inplace=True),
-    nn.BatchNorm2d(64),
     nn.Conv2d(64, 64, kernel_size=3, stride=1),
     nn.ReLU(inplace=True),
     nn.BatchNorm2d(64),
@@ -243,7 +240,7 @@ print("defined model")
 model.type(dtype)
 model.train()
 loss_fn = nn.CrossEntropyLoss().type(dtype)
-optimizer = optim.Adam(model.parameters(), lr=5e-5,weight_decay=0)
+optimizer = optim.Adam(model.parameters(), lr=5e-5,weight_decay=0.005)
 print("start training")
 loss_history,acc_history,val_acc_history=train(train_loader,val_loader, model, loss_fn, optimizer, dtype,num_epochs=25, print_every=10)
 
@@ -265,7 +262,6 @@ plt.xlabel("iterations")
 plt.ylabel("validation accuracy")
 plt.savefig("val_smile_acc.png")
 plt.gcf().clear()
-
 
 torch.save(model.state_dict(), save_model_path)
 state_dict = torch.load(save_model_path)
