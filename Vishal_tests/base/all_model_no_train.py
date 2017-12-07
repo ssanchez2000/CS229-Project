@@ -13,6 +13,7 @@ from sklearn.model_selection import train_test_split
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+
 class AllDataset(Dataset):
 
     def __init__(self,csv_path,file_name,dtype,mode):
@@ -83,7 +84,7 @@ class Unflatten(nn.Module):
         N,M = x.size() # read in N, C* H* W
         return x.view(N,C,H,W)
 
-def all_train(loader_train, all_model,gender_model,smile_model, loss_fn, all_optimizer, dtype,num_epochs=1, print_every=20):
+def all_train(loader_train, all_model,gender_model,smile_model, loss_fn, all_optimizer, dtype,num_epochs=1, print_every=10):
     """
     train `model` on data from `loader_train` for one epoch
 
@@ -204,7 +205,7 @@ def validate(all_model,gender_model,smile_model, loader, dtype):
 
     return acc_all,acc_gender,acc_smile
 
-dtype = torch.FloatTensor
+dtype = torch.cuda.FloatTensor
 train_csv_path = '../../data/train_face/'
 train_file_name="gender_fex_trset.csv"
 test_csv_path="../../data/test_face/"
