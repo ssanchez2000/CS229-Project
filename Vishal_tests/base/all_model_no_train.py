@@ -23,7 +23,7 @@ class AllDataset(Dataset):
         if(mode=="train" or mode=="val"):
             labels=train_data.ix[:,5:7]
             img_names=train_data.ix[:,0:1]
-            img_names_train, img_names_val, labels_train, labels_val = train_test_split(img_names, labels, random_state=0,train_size=0.7,test_size=0.3)
+            img_names_train, img_names_val, labels_train, labels_val = train_test_split(img_names, labels, random_state=0,train_size=0.85,test_size=0.15)
             self.N=img_names_train.shape[0]
             self.V=img_names_val.shape[0]
             self.img_names_train=np.array(img_names_train).reshape([self.N,1])
@@ -210,8 +210,8 @@ train_file_name="gender_fex_trset.csv"
 test_csv_path="../../data/test_face/"
 test_file_name="gender_fex_valset.csv"
 save_model_path="all_model.pkl"
-best_gender_model_path="all_gender_model.pkl"
-best_smile_model_path="all_smile_model.pkl"
+best_gender_model_path="gender_model.pkl"
+best_smile_model_path="smile_model.pkl"
 
 
 train_dataset = AllDataset(train_csv_path, train_file_name, dtype,"train")
@@ -267,7 +267,7 @@ gender_temp_model = gender_temp_model.type(dtype)
 gender_temp_model.train()
 size=0
 
-for t, (x, y) in enumerate(train_loader):
+for t, (x, y,z) in enumerate(train_loader):
     x_var = Variable(x.type(dtype))
     size=gender_temp_model(x_var).size()
     if(t==0):
@@ -324,11 +324,11 @@ smile_temp_model=nn.Sequential(
     ## 32x32
     Flatten())
 
-smile_temp_model = temp_model.type(dtype)
+smile_temp_model = smile_temp_model.type(dtype)
 smile_temp_model.train()
 size=0
 
-for t, (x, y) in enumerate(train_loader):
+for t, (x, y,z) in enumerate(train_loader):
     x_var = Variable(x.type(dtype))
     size=smile_temp_model(x_var).size()
     if(t==0):
