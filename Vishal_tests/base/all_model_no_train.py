@@ -216,15 +216,15 @@ best_smile_model_path="smile_model.pkl"
 
 train_dataset = AllDataset(train_csv_path, train_file_name, dtype,"train")
 ## loader
-train_loader = DataLoader(train_dataset,batch_size=256,shuffle=True)
+train_loader = DataLoader(train_dataset,batch_size=64,shuffle=True)
 
 val_dataset = AllDataset(train_csv_path, train_file_name, dtype,"val")
 ## loader
-val_loader = DataLoader(val_dataset,batch_size=256,shuffle=True)
+val_loader = DataLoader(val_dataset,batch_size=64,shuffle=True)
 
 test_dataset = AllDataset(test_csv_path, test_file_name, dtype,"test")
 ## loader
-test_loader = DataLoader(test_dataset,batch_size=256,shuffle=True)
+test_loader = DataLoader(test_dataset,batch_size=64,shuffle=True)
 print("loaded data")
 
 
@@ -377,7 +377,7 @@ loss_fn = nn.CrossEntropyLoss().type(dtype)
 all_optimizer = optim.Adam(all_model.parameters(), lr=5e-2)
 
 print("start training")
-loss_all_history, loss_gender_history,loss_smile_history, acc_all_history, acc_gender_history,acc_smile_history=all_train(train_loader, all_model,gender_model,smile_model, loss_fn, all_optimizer, dtype,num_epochs=0, print_every=5)
+loss_all_history, loss_gender_history,loss_smile_history, acc_all_history, acc_gender_history,acc_smile_history=all_train(train_loader, all_model,gender_model,smile_model, loss_fn, all_optimizer, dtype,num_epochs=1, print_every=10)
 
 plt.plot(range(len(loss_smile_history)),loss_smile_history)
 plt.xlabel("iterations")
