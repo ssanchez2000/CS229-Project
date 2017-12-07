@@ -257,12 +257,27 @@ gender_temp_model=nn.Sequential(
      nn.Conv2d(3, 16, kernel_size=3, stride=1),
      nn.ReLU(inplace=True),
      nn.BatchNorm2d(16),
+     nn.Conv2d(16, 16, kernel_size=3, stride=1),
+     nn.ReLU(inplace=True),
+     nn.BatchNorm2d(16),
      nn.AdaptiveMaxPool2d(128),
+     ## 128x128
      nn.Conv2d(16, 32, kernel_size=3, stride=1),
      nn.ReLU(inplace=True),
      nn.BatchNorm2d(32),
+     nn.Conv2d(32, 32, kernel_size=3, stride=1),
+     nn.ReLU(inplace=True),
+     nn.BatchNorm2d(32),
      nn.AdaptiveMaxPool2d(64),
-    Flatten())
+     ## 64x64
+     nn.Conv2d(32, 64, kernel_size=3, stride=1),
+     nn.ReLU(inplace=True),
+     nn.BatchNorm2d(64),
+     nn.Conv2d(64, 64, kernel_size=3, stride=1),
+     nn.ReLU(inplace=True),
+     nn.BatchNorm2d(64),
+     nn.AdaptiveMaxPool2d(32),
+     Flatten())
 
 gender_temp_model = gender_temp_model.type(dtype)
 gender_temp_model.train()
@@ -275,20 +290,36 @@ for t, (x, y,z) in enumerate(train_loader):
         break
 
 gender_model = nn.Sequential(
-    nn.Conv2d(3, 16, kernel_size=3, stride=1),
-    nn.ReLU(inplace=True),
-    nn.BatchNorm2d(16),
-    nn.AdaptiveMaxPool2d(128),
-    nn.Conv2d(16, 32, kernel_size=3, stride=1),
-    nn.ReLU(inplace=True),
-    nn.BatchNorm2d(32),
-    nn.AdaptiveMaxPool2d(64),
-    Flatten(),
-    nn.Linear(size[1], 512),
-    nn.ReLU(inplace=True),
-    nn.Linear(512, 512),
-    nn.ReLU(inplace=True),
-    nn.Linear(512, 2))
+        nn.Conv2d(3, 16, kernel_size=3, stride=1),
+        nn.ReLU(inplace=True),
+        nn.BatchNorm2d(16),
+        nn.Conv2d(16, 16, kernel_size=3, stride=1),
+        nn.ReLU(inplace=True),
+        nn.BatchNorm2d(16),
+        nn.AdaptiveMaxPool2d(128),
+        ## 128x128
+        nn.Conv2d(16, 32, kernel_size=3, stride=1),
+        nn.ReLU(inplace=True),
+        nn.BatchNorm2d(32),
+        nn.Conv2d(32, 32, kernel_size=3, stride=1),
+        nn.ReLU(inplace=True),
+        nn.BatchNorm2d(32),
+        nn.AdaptiveMaxPool2d(64),
+        ## 64x64
+        nn.Conv2d(32, 64, kernel_size=3, stride=1),
+        nn.ReLU(inplace=True),
+        nn.BatchNorm2d(64),
+        nn.Conv2d(64, 64, kernel_size=3, stride=1),
+        nn.ReLU(inplace=True),
+        nn.BatchNorm2d(64),
+        nn.AdaptiveMaxPool2d(32),
+        Flatten(),
+        nn.Linear(size[1], 4096),
+        nn.ReLU(inplace=True),
+        nn.Linear(4096,1024),
+        nn.ReLU(inplace=True),
+        nn.Linear(1024,2),
+        nn.Softmax())
 
 
 state_gender_dict = torch.load(best_gender_model_path)
