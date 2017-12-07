@@ -80,7 +80,7 @@ class Unflatten(nn.Module):
         C=3
         H=256
         W=256
-        N,M = x.size() # read in N, C, H, W
+        N,M = x.size() # read in N, C* H* W
         return x.view(N,C,H,W)
 
 def all_train(loader_train, all_model,gender_model,smile_model, loss_fn, all_optimizer, dtype,num_epochs=1, print_every=20):
@@ -125,7 +125,7 @@ def all_train(loader_train, all_model,gender_model,smile_model, loss_fn, all_opt
             loss_smile = loss_fn(scores_smile, z_var)
             loss_smile_history.append(loss_smile.data[0])
 
-            loss_all=loss_smile/loss_gender
+            loss_all=loss_smile-loss_gender
             loss_all_history.append(loss_all.data[0])
 
             y_pred = scores_gender.data.max(1)[1].cpu().numpy()
