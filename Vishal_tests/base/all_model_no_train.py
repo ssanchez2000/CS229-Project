@@ -75,6 +75,14 @@ class Flatten(nn.Module):
         N, C, H, W = x.size() # read in N, C, H, W
         return x.view(N, -1)
 
+class Unflatten(nn.Module):
+    def forward(self, x):
+        C=3
+        H=256
+        W=256
+        N,M = x.size() # read in N, C, H, W
+        return x.view(N,C,H,W)
+
 def all_train(loader_train, all_model,gender_model,smile_model, loss_fn, all_optimizer, dtype,num_epochs=1, print_every=20):
     """
     train `model` on data from `loader_train` for one epoch
@@ -95,7 +103,8 @@ def all_train(loader_train, all_model,gender_model,smile_model, loss_fn, all_opt
     loss_all_history = []
 
     all_model.train()
-
+    gender_model.eval()
+    smile_model.eval()
     for i in range(num_epochs):
         for t, (x,y,z) in enumerate(loader_train):
             x_var = Variable(x.type(dtype))
@@ -236,30 +245,139 @@ all_model = nn.Sequential(
 Flatten(),
 nn.Linear(size[1], 256),
 nn.ReLU(inplace=True),
-nn.Linear(256, size[1]))
+nn.Linear(256, size[1]),
+Unflatten())
+
 all_model.type(dtype)
 all_model.train()
 print("defined all model")
-gender_model= nn.Sequential(
-nn.Linear(size[1], 10),
-nn.ReLU(inplace=True),
-nn.Linear(10, 2))
-smile_model= nn.Sequential(
-nn.Linear(size[1], 10),
-nn.ReLU(inplace=True),
-nn.Linear(10, 2))
+
+gender_temp_model=nn.Sequential(
+     nn.Conv2d(3, 16, kernel_size=3, stride=1),
+     nn.ReLU(inplace=True),
+     nn.BatchNorm2d(16),
+     nn.AdaptiveMaxPool2d(128),
+     nn.Conv2d(16, 32, kernel_size=3, stride=1),
+     nn.ReLU(inplace=True),
+     nn.BatchNorm2d(32),
+     nn.AdaptiveMaxPool2d(64),
+    Flatten())
+
+gender_temp_model = gender_temp_model.type(dtype)
+gender_temp_model.train()
+size=0
+
+for t, (x, y) in enumerate(train_loader):
+    x_var = Variable(x.type(dtype))
+    size=gender_temp_model(x_var).size()
+    if(t==0):
+        break
+
+gender_model = nn.Sequential(
+    nn.Conv2d(3, 16, kernel_size=3, stride=1),
+    nn.ReLU(inplace=True),
+    nn.BatchNorm2d(16),
+    nn.AdaptiveMaxPool2d(128),
+    nn.Conv2d(16, 32, kernel_size=3, stride=1),
+    nn.ReLU(inplace=True),
+    nn.BatchNorm2d(32),
+    nn.AdaptiveMaxPool2d(64),
+    Flatten(),
+    nn.Linear(size[1], 512),
+    nn.ReLU(inplace=True),
+    nn.Linear(512, 512),
+    nn.ReLU(inplace=True),
+    nn.Linear(512, 2))
+
 
 state_gender_dict = torch.load(best_gender_model_path)
 gender_model.load_state_dict(state_gender_dict)
+gender_model.type(dtype)
+
+print("defined gender model")
+
+
+smile_temp_model=nn.Sequential(
+    nn.Conv2d(3, 16, kernel_size=3, stride=1),
+    nn.ReLU(inplace=True),
+    nn.BatchNorm2d(16),
+    nn.Conv2d(16, 16, kernel_size=3, stride=1),
+    nn.ReLU(inplace=True),
+    nn.BatchNorm2d(16),
+    nn.AdaptiveMaxPool2d(128),
+    ## 128x128
+    nn.Conv2d(16, 32, kernel_size=3, stride=1),
+    nn.ReLU(inplace=True),
+    nn.BatchNorm2d(32),
+    nn.Conv2d(32, 32, kernel_size=3, stride=1),
+    nn.ReLU(inplace=True),
+    nn.BatchNorm2d(32),
+    nn.AdaptiveMaxPool2d(64),
+    ## 64x64
+    nn.Conv2d(32, 64, kernel_size=3, stride=1),
+    nn.ReLU(inplace=True),
+    nn.BatchNorm2d(64),
+    nn.Conv2d(64, 64, kernel_size=3, stride=1),
+    nn.ReLU(inplace=True),
+    nn.BatchNorm2d(64),
+    nn.AdaptiveMaxPool2d(32),
+    ## 32x32
+    Flatten())
+
+smile_temp_model = temp_model.type(dtype)
+smile_temp_model.train()
+size=0
+
+for t, (x, y) in enumerate(train_loader):
+    x_var = Variable(x.type(dtype))
+    size=smile_temp_model(x_var).size()
+    if(t==0):
+        break
+
+smile_model = nn.Sequential(
+    nn.Conv2d(3, 16, kernel_size=3, stride=1),
+    nn.ReLU(inplace=True),
+    nn.BatchNorm2d(16),
+    nn.Conv2d(16, 16, kernel_size=3, stride=1),
+    nn.ReLU(inplace=True),
+    nn.BatchNorm2d(16),
+    nn.AdaptiveMaxPool2d(128),
+    ## 128x128
+    nn.Conv2d(16, 32, kernel_size=3, stride=1),
+    nn.ReLU(inplace=True),
+    nn.BatchNorm2d(32),
+    nn.Conv2d(32, 32, kernel_size=3, stride=1),
+    nn.ReLU(inplace=True),
+    nn.BatchNorm2d(32),
+    nn.AdaptiveMaxPool2d(64),
+    ## 64x64
+    nn.Conv2d(32, 64, kernel_size=3, stride=1),
+    nn.ReLU(inplace=True),
+    nn.AdaptiveMaxPool2d(64),
+    nn.Conv2d(64, 64, kernel_size=3, stride=1),
+    nn.ReLU(inplace=True),
+    nn.BatchNorm2d(64),
+    nn.AdaptiveMaxPool2d(32),
+    ## 32x32
+    Flatten(),
+    nn.Linear(size[1], 4096),
+    nn.ReLU(inplace=True),
+    nn.Linear(4096,1024),
+    nn.ReLU(inplace=True),
+    nn.Linear(1024,2),
+    nn.Softmax())
 
 state_smile_dict = torch.load(best_smile_model_path)
 smile_model.load_state_dict(state_smile_dict)
+smile_model.type(dtype)
+
+print("defined smile model")
 
 loss_fn = nn.CrossEntropyLoss().type(dtype)
 all_optimizer = optim.Adam(all_model.parameters(), lr=5e-2)
 
 print("start training")
-loss_all_history, loss_gender_history,loss_smile_history, acc_all_history, acc_gender_history,acc_smile_history=all_train(train_loader, all_model,gender_model,smile_model, loss_fn, all_optimizer, dtype,num_epochs=1, print_every=5)
+loss_all_history, loss_gender_history,loss_smile_history, acc_all_history, acc_gender_history,acc_smile_history=all_train(train_loader, all_model,gender_model,smile_model, loss_fn, all_optimizer, dtype,num_epochs=0, print_every=5)
 
 plt.plot(range(len(loss_smile_history)),loss_smile_history)
 plt.xlabel("iterations")
