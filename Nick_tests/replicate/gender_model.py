@@ -234,7 +234,7 @@ model.type(dtype)
 model.train()
 loss_fn = nn.CrossEntropyLoss().type(dtype)
 # 1e-1 too high
-optimizer = optim.Adam(model.parameters(), lr=8e-5,weight_decay=3e-2)
+optimizer = optim.Adam(model.parameters(), lr=1e-4,weight_decay=1e-3)
 print("start training")
 loss_history,acc_history,val_acc_history=train(train_loader,val_loader, model, loss_fn, optimizer, dtype,num_epochs=15, print_every=17)
 
