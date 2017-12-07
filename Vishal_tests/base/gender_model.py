@@ -76,7 +76,7 @@ class Flatten(nn.Module):
         return x.view(N, -1)
 
 
-def train(loader_train,val_loader, model, loss_fn, optimizer, dtype,num_epochs=1, print_every=20):
+def train(loader_train,val_loader, model, loss_fn, optimizer, dtype,num_epochs=1, print_every=10):
     """
     train `model` on data from `loader_train` for one epoch
 
@@ -107,12 +107,13 @@ def train(loader_train,val_loader, model, loss_fn, optimizer, dtype,num_epochs=1
 
             if (t + 1) % print_every == 0:
                 print('t = %d, loss = %.4f, acc = %.4f' % (t + 1, loss.data[0], acc))
+                val_acc=validate_epoch(model, val_loader, dtype)
+                val_acc_history.append(val_acc)
 
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
-            val_acc=validate_epoch(model, val_loader, dtype)
-            val_acc_history.append(val_acc)
+
 
     return loss_history, acc_history,val_acc_history
 
@@ -154,26 +155,41 @@ save_model_path="gender_model.pkl"
 
 train_dataset = GenderDataset(train_csv_path, train_file_name, dtype,"train")
 ## loader
-train_loader = DataLoader(train_dataset,batch_size=256,shuffle=True)
+train_loader = DataLoader(train_dataset,batch_size=64,shuffle=True)
 
 val_dataset = GenderDataset(train_csv_path, train_file_name, dtype,"val")
 ## loader
-val_loader = DataLoader(val_dataset,batch_size=256,shuffle=True)
+val_loader = DataLoader(val_dataset,batch_size=64,shuffle=True)
 
 test_dataset = GenderDataset(test_csv_path, test_file_name, dtype,"test")
 ## loader
-test_loader = DataLoader(test_dataset,batch_size=256,shuffle=True)
+test_loader = DataLoader(test_dataset,batch_size=64,shuffle=True)
 print("loaded data")
 
 temp_model=nn.Sequential(
-     nn.Conv2d(3, 16, kernel_size=3, stride=1),
-     nn.ReLU(inplace=True),
-     nn.BatchNorm2d(16),
-     nn.AdaptiveMaxPool2d(128),
-     nn.Conv2d(16, 32, kernel_size=3, stride=1),
-     nn.ReLU(inplace=True),
-     nn.BatchNorm2d(32),
-     nn.AdaptiveMaxPool2d(64),
+    nn.Conv2d(3, 16, kernel_size=3, stride=1),
+    nn.ReLU(inplace=True),
+    nn.BatchNorm2d(16),
+    nn.Conv2d(16, 16, kernel_size=3, stride=1),
+    nn.ReLU(inplace=True),
+    nn.BatchNorm2d(16),
+    nn.AdaptiveMaxPool2d(128),
+    ## 128x128
+    nn.Conv2d(16, 32, kernel_size=3, stride=1),
+    nn.ReLU(inplace=True),
+    nn.BatchNorm2d(32),
+    nn.Conv2d(32, 32, kernel_size=3, stride=1),
+    nn.ReLU(inplace=True),
+    nn.BatchNorm2d(32),
+    nn.AdaptiveMaxPool2d(64),
+    ## 64x64
+    nn.Conv2d(32, 64, kernel_size=3, stride=1),
+    nn.ReLU(inplace=True),
+    nn.BatchNorm2d(64),
+    nn.Conv2d(64, 64, kernel_size=3, stride=1),
+    nn.ReLU(inplace=True),
+    nn.BatchNorm2d(64),
+    nn.AdaptiveMaxPool2d(32),
     Flatten())
 
 temp_model = temp_model.type(dtype)
@@ -190,26 +206,42 @@ model = nn.Sequential(
     nn.Conv2d(3, 16, kernel_size=3, stride=1),
     nn.ReLU(inplace=True),
     nn.BatchNorm2d(16),
+    nn.Conv2d(16, 16, kernel_size=3, stride=1),
+    nn.ReLU(inplace=True),
+    nn.BatchNorm2d(16),
     nn.AdaptiveMaxPool2d(128),
+    ## 128x128
     nn.Conv2d(16, 32, kernel_size=3, stride=1),
     nn.ReLU(inplace=True),
     nn.BatchNorm2d(32),
+    nn.Conv2d(32, 32, kernel_size=3, stride=1),
+    nn.ReLU(inplace=True),
+    nn.BatchNorm2d(32),
     nn.AdaptiveMaxPool2d(64),
+    ## 64x64
+    nn.Conv2d(32, 64, kernel_size=3, stride=1),
+    nn.ReLU(inplace=True),
+    nn.BatchNorm2d(64),
+    nn.Conv2d(64, 64, kernel_size=3, stride=1),
+    nn.ReLU(inplace=True),
+    nn.BatchNorm2d(64),
+    nn.AdaptiveMaxPool2d(32),
     Flatten(),
-    nn.Linear(size[1], 512),
+    nn.Linear(size[1], 4096),
     nn.ReLU(inplace=True),
-    nn.Linear(512, 512),
+    nn.Linear(4096,1024),
     nn.ReLU(inplace=True),
-    nn.Linear(512, 2))
+    nn.Linear(1024,2),
+    nn.Softmax())
 print("defined model")
 
 model.type(dtype)
 model.train()
 loss_fn = nn.CrossEntropyLoss().type(dtype)
-optimizer = optim.Adam(model.parameters(), lr=1e-5,weight_decay=5e-1)
+optimizer = optim.Adam(model.parameters(), lr=1e-4,weight_decay=8e-3)
 print("start training")
 
-loss_history,acc_history,val_acc_history=train(train_loader,val_loader, model, loss_fn, optimizer, dtype,num_epochs=15, print_every=4)
+loss_history,acc_history,val_acc_history=train(train_loader,val_loader, model, loss_fn, optimizer, dtype,num_epochs=15, print_every=10)
 
 plt.plot(range(len(loss_history)),loss_history)
 plt.xlabel("iterations")
@@ -238,3 +270,5 @@ print("model saved and loaded")
 print("start validation")
 val_acc=validate_epoch(model, val_loader, dtype)
 print(val_acc)
+test_acc=validate_epoch(model, test_loader, dtype)
+print(test_acc)
