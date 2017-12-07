@@ -217,15 +217,15 @@ best_smile_model_path="smile_model.pkl"
 
 train_dataset = AllDataset(train_csv_path, train_file_name, dtype,"train")
 ## loader
-train_loader = DataLoader(train_dataset,batch_size=64,shuffle=True)
+train_loader = DataLoader(train_dataset,batch_size=32,shuffle=True)
 
 val_dataset = AllDataset(train_csv_path, train_file_name, dtype,"val")
 ## loader
-val_loader = DataLoader(val_dataset,batch_size=64,shuffle=True)
+val_loader = DataLoader(val_dataset,batch_size=32,shuffle=True)
 
 test_dataset = AllDataset(test_csv_path, test_file_name, dtype,"test")
 ## loader
-test_loader = DataLoader(test_dataset,batch_size=64,shuffle=True)
+test_loader = DataLoader(test_dataset,batch_size=32,shuffle=True)
 print("loaded data")
 
 
