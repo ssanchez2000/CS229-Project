@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 class AllDataset(Dataset):
 
     def __init__(self,csv_path,file_name,dtype,mode):
-        train_data = pd.read_csv(csv_path+file_name,header=0, skiprows=[0])
+        train_data = pd.read_csv(csv_path+file_name)
         self.dtype = dtype
         self.mode=mode
         self.csv_path=csv_path
@@ -32,7 +32,7 @@ class AllDataset(Dataset):
             self.img_names_val=np.array(img_names_val).reshape([self.V,1])
 
         if(mode=="test"):
-            test_data=pd.read_csv(csv_path+file_name,header=0, skiprows=[0])
+            test_data=pd.read_csv(csv_path+file_name)
             self.T=test_data.shape[0]
             self.img_names_test=np.array(test_data.ix[:,0:1]).reshape([self.T,1])
             self.labels_test=np.array(test_data.ix[:,5:7]).reshape([self.T,2])
