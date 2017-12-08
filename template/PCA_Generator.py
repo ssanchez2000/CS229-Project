@@ -12,18 +12,21 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 import numpy as npnp
 import sklearn.decomposition
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 
 class AllDataset(Dataset):
 
     def __init__(self,csv_path,file_name,dtype,mode):
-        train_data = pd.read_csv(csv_path+file_name,header=0, skiprows=[0])
+        train_data = pd.read_csv(csv_path+file_name)
         self.dtype = dtype
         self.mode=mode
         self.csv_path=csv_path
         if(mode=="train" or mode=="val"):
             labels=train_data.ix[:,5:7]
             img_names=train_data.ix[:,0:1]
-            img_names_train, img_names_val, labels_train, labels_val = train_test_split(img_names, labels, random_state=0,train_size=0.7,test_size=0.3)
+            img_names_train, img_names_val, labels_train, labels_val = train_test_split(img_names, labels, random_state=0,train_size=0.85,test_size=0.15)
             self.N=img_names_train.shape[0]
             self.V=img_names_val.shape[0]
             self.img_names_train=np.array(img_names_train).reshape([self.N,1])
@@ -32,7 +35,7 @@ class AllDataset(Dataset):
             self.img_names_val=np.array(img_names_val).reshape([self.V,1])
 
         if(mode=="test"):
-            test_data=pd.read_csv(csv_path+file_name,header=0, skiprows=[0])
+            test_data=pd.read_csv(csv_path+file_name)
             self.T=test_data.shape[0]
             self.img_names_test=np.array(test_data.ix[:,0:1]).reshape([self.T,1])
             self.labels_test=np.array(test_data.ix[:,5:7]).reshape([self.T,2])
@@ -95,7 +98,8 @@ def all_train(loader_train, gender_model,smile_model, loss_fn, gender_optimizer,
     loss_all_history = []
 
     #all_model.train()
-
+    gender_model.eval()
+    smile_model.eval()
     for i in range(num_epochs):
         for t, (x,y,z) in enumerate(loader_train):
             x_var = Variable(x.type(dtype))
@@ -117,24 +121,24 @@ def all_train(loader_train, gender_model,smile_model, loss_fn, gender_optimizer,
             loss_smile = loss_fn(scores_smile, z_var)
             loss_smile_history.append(loss_smile.data[0])
 
-            loss_all=loss_smile/loss_gender
+            loss_all=loss_smile-loss_gender
             loss_all_history.append(loss_all.data[0])
 
-            y_pred = scores_gender.data.max(1)[1].numpy()
-            z_pred = scores_smile.data.max(1)[1].numpy()
+            y_pred = scores_gender.data.max(1)[1].cpu().numpy()
+            z_pred = scores_smile.data.max(1)[1].cpu().numpy()
 
-            acc_gender = (y_var.data.numpy()==y_pred).sum()/float(y_pred.shape[0])
+            acc_gender = (y_var.data.cpu().numpy()==y_pred).sum()/float(y_pred.shape[0])
             acc_gender_history.append(acc_gender)
 
-            acc_smile = (z_var.data.numpy()==z_pred).sum()/float(z_pred.shape[0])
+            acc_smile = (z_var.data.cpu().numpy()==z_pred).sum()/float(z_pred.shape[0])
             acc_smile_history.append(acc_smile)
 
-            y_bool=(y_var.data.numpy()!=y_pred)
-            z_bool=(z_var.data.numpy()==z_pred)
+            y_bool=(y_var.data.cpu().numpy()!=y_pred)
+            z_bool=(z_var.data.cpu().numpy()==z_pred)
             acc_all=np.multiply(y_bool,z_bool).sum()/float(y_bool.shape[0])
             acc_all_history.append(acc_all)
             if (t + 1) % print_every == 0:
-                print('t = %d, loss_all = %.4f,acc_gender = %.4f,acc_smile = %.4f, acc_all = %.4f' % (t + 1, loss_all.data[0],acc_gender,acc_smile, acc_all))
+                print('t = %d, loss_all = %.4f,loss_gender = %.4f,loss_smile = %.4f, acc_all = %.4f' % (t + 1, loss_all.data[0],loss_gender.data[0],loss_smile.data[0], acc_all))
 
             gender_optimizer.zero_grad()
             loss_gender.backward(retain_graph=True)
@@ -182,13 +186,13 @@ def validate(gender_model,smile_model, loader, dtype):
         scores_gender=gender_model(noise_x)
         scores_smile=smile_model(noise_x)
 
-        y_pred = scores_gender.data.max(1)[1].numpy()
-        z_pred = scores_smile.data.max(1)[1].numpy()
+        y_pred = scores_gender.data.max(1)[1].cpu().numpy()
+        z_pred = scores_smile.data.max(1)[1].cpu().numpy()
 
-        y_array[i*bs:(i+1)*bs] = y_var.data.numpy()
+        y_array[i*bs:(i+1)*bs] = y_var.data.cpu().numpy()
         y_pred_array[i*bs:(i+1)*bs] = y_pred
 
-        z_array[i*bs:(i+1)*bs] = z_var.data.numpy()
+        z_array[i*bs:(i+1)*bs] = z_var.data.cpu().numpy()
         z_pred_array[i*bs:(i+1)*bs] = z_pred
 
     acc_gender = (y_array==y_pred_array).sum()/float(y_pred_array.shape[0])
@@ -200,25 +204,25 @@ def validate(gender_model,smile_model, loader, dtype):
 
     return acc_all,acc_gender,acc_smile
 
-dtype = torch.FloatTensor
+dtype = torch.cuda.FloatTensor
 train_csv_path = '../data/train_face/'
 train_file_name="gender_fex_trset.csv"
 test_csv_path="../data/test_face/"
 test_file_name="gender_fex_valset.csv"
 #save_model_path="all_model.pkl"
-save_gender_model_path="all_gender_model.pkl"
-save_smile_model_path="all_smile_model.pkl"
+best_gender_model_path="../Vishal_tests/base/gender_model.pkl"
+best_smile_model_path="../Vishal_tests/base/smile_model.pkl"
 train_dataset = AllDataset(train_csv_path, train_file_name, dtype,"train")
 ## loader
-train_loader = DataLoader(train_dataset,batch_size=256,shuffle=True)
+train_loader = DataLoader(train_dataset,batch_size=32,shuffle=True)
 
 val_dataset = AllDataset(train_csv_path, train_file_name, dtype,"val")
 ## loader
-val_loader = DataLoader(val_dataset,batch_size=256,shuffle=True)
+val_loader = DataLoader(val_dataset,batch_size=32,shuffle=True)
 
 test_dataset = AllDataset(test_csv_path, test_file_name, dtype,"test")
 ## loader
-test_loader = DataLoader(test_dataset,batch_size=256,shuffle=True)
+test_loader = DataLoader(test_dataset,batch_size=32,shuffle=True)
 print("loaded data")
 
 
@@ -237,7 +241,7 @@ for t, (x, y, z) in enumerate(train_loader):
 
 def pca_model(x_var,nComp,dtype):
 
-    img = x_var.data.numpy()
+    img = x_var.data.cpu().numpy()
 
     for indx in range(img.shape[0]):
         R = img[indx,0,:,:]
@@ -265,20 +269,112 @@ def pca_model(x_var,nComp,dtype):
     x_var = Variable(img.type(dtype))
     return x_var
 
-gender_model= nn.Sequential(
-    Flatten(),
-    nn.Linear(size[1], 10),
-    nn.ReLU(inplace=True),
-    nn.Linear(10, 2))
+gender_temp_model=nn.Sequential(
+     nn.Conv2d(3, 16, kernel_size=3, stride=1),
+     nn.ReLU(inplace=True),
+     nn.BatchNorm2d(16),
+     nn.Conv2d(16, 16, kernel_size=3, stride=1),
+     nn.ReLU(inplace=True),
+     nn.BatchNorm2d(16),
+     nn.AdaptiveMaxPool2d(128),
+     ## 128x128
+     nn.Conv2d(16, 32, kernel_size=3, stride=1),
+     nn.ReLU(inplace=True),
+     nn.BatchNorm2d(32),
+     nn.Conv2d(32, 32, kernel_size=3, stride=1),
+     nn.ReLU(inplace=True),
+     nn.BatchNorm2d(32),
+     nn.AdaptiveMaxPool2d(64),
+     ## 64x64
+     nn.Conv2d(32, 64, kernel_size=3, stride=1),
+     nn.ReLU(inplace=True),
+     nn.BatchNorm2d(64),
+     nn.Conv2d(64, 64, kernel_size=3, stride=1),
+     nn.ReLU(inplace=True),
+     nn.BatchNorm2d(64),
+     nn.AdaptiveMaxPool2d(32),
+     Flatten())
+
+gender_temp_model = gender_temp_model.type(dtype)
+gender_temp_model.train()
+size=0
+
+for t, (x, y,z) in enumerate(train_loader):
+    x_var = Variable(x.type(dtype))
+    size=gender_temp_model(x_var).size()
+    if(t==0):
+        break
+
+gender_model = nn.Sequential(
+        nn.Conv2d(3, 16, kernel_size=3, stride=1),
+        nn.ReLU(inplace=True),
+        nn.BatchNorm2d(16),
+        nn.Conv2d(16, 16, kernel_size=3, stride=1),
+        nn.ReLU(inplace=True),
+        nn.BatchNorm2d(16),
+        nn.AdaptiveMaxPool2d(128),
+        ## 128x128
+        nn.Conv2d(16, 32, kernel_size=3, stride=1),
+        nn.ReLU(inplace=True),
+        nn.BatchNorm2d(32),
+        nn.Conv2d(32, 32, kernel_size=3, stride=1),
+        nn.ReLU(inplace=True),
+        nn.BatchNorm2d(32),
+        nn.AdaptiveMaxPool2d(64),
+        ## 64x64
+        nn.Conv2d(32, 64, kernel_size=3, stride=1),
+        nn.ReLU(inplace=True),
+        nn.BatchNorm2d(64),
+        nn.Conv2d(64, 64, kernel_size=3, stride=1),
+        nn.ReLU(inplace=True),
+        nn.BatchNorm2d(64),
+        nn.AdaptiveMaxPool2d(32),
+        Flatten(),
+        nn.Linear(size[1], 4096),
+        nn.ReLU(inplace=True),
+        nn.Linear(4096,1024),
+        nn.ReLU(inplace=True),
+        nn.Linear(1024,2),
+        nn.Softmax())
+
+
+state_gender_dict = torch.load(best_gender_model_path)
+gender_model.load_state_dict(state_gender_dict)
 gender_model.type(dtype)
 gender_model.train()
 print("defined gender model")
 
 smile_model= nn.Sequential(
-    Flatten(),
-    nn.Linear(size[1], 10),
-    nn.ReLU(inplace=True),
-    nn.Linear(10, 2))
+nn.Conv2d(3, 16, kernel_size=3, stride=1),
+        nn.ReLU(inplace=True),
+        nn.BatchNorm2d(16),
+        nn.Conv2d(16, 16, kernel_size=3, stride=1),
+        nn.ReLU(inplace=True),
+        nn.BatchNorm2d(16),
+        nn.AdaptiveMaxPool2d(128),
+        ## 128x128
+        nn.Conv2d(16, 32, kernel_size=3, stride=1),
+        nn.ReLU(inplace=True),
+        nn.BatchNorm2d(32),
+        nn.Conv2d(32, 32, kernel_size=3, stride=1),
+        nn.ReLU(inplace=True),
+        nn.BatchNorm2d(32),
+        nn.AdaptiveMaxPool2d(64),
+        ## 64x64
+        nn.Conv2d(32, 64, kernel_size=3, stride=1),
+        nn.ReLU(inplace=True),
+        nn.BatchNorm2d(64),
+        nn.Conv2d(64, 64, kernel_size=3, stride=1),
+        nn.ReLU(inplace=True),
+        nn.BatchNorm2d(64),
+        nn.AdaptiveMaxPool2d(32),
+        Flatten(),
+        nn.Linear(size[1], 4096),
+        nn.ReLU(inplace=True),
+        nn.Linear(4096,1024),
+        nn.ReLU(inplace=True),
+        nn.Linear(1024,2),
+        nn.Softmax())
 smile_model.type(dtype)
 smile_model.train()
 print("defined smile model")
@@ -289,18 +385,48 @@ smile_optimizer = optim.Adam(smile_model.parameters(), lr=5e-2)
 print("start training")
 loss_all_history, loss_gender_history,loss_smile_history, acc_all_history, acc_gender_history,acc_smile_history=all_train(train_loader, gender_model,smile_model, loss_fn, gender_optimizer,smile_optimizer, dtype,num_epochs=1, print_every=1)
 
-#torch.save(all_model.state_dict(), save_model_path)
-torch.save(gender_model.state_dict(), save_gender_model_path)
-torch.save(smile_model.state_dict(), save_smile_model_path)
+plt.plot(range(len(loss_smile_history)),loss_smile_history)
+plt.xlabel("iterations")
+plt.ylabel("loss")
+plt.savefig("smile_loss_all_minus_train.png")
+plt.gcf().clear()
 
-#state_all_dict = torch.load(save_model_path)
-#all_model.load_state_dict(state_all_dict)
+plt.plot(range(len(acc_smile_history)),acc_smile_history)
+plt.xlabel("iterations")
+plt.ylabel("accuracy")
+plt.savefig("smile_acc_all_minus_train.png")
+plt.gcf().clear()
 
-state_gender_dict = torch.load(save_gender_model_path)
-gender_model.load_state_dict(state_gender_dict)
+plt.plot(range(len(loss_gender_history)),loss_gender_history)
+plt.xlabel("iterations")
+plt.ylabel("loss")
+plt.savefig("gender_loss_all_minus_train.png")
+plt.gcf().clear()
 
-state_smile_dict = torch.load(save_smile_model_path)
-smile_model.load_state_dict(state_smile_dict)
+plt.plot(range(len(acc_gender_history)),acc_gender_history)
+plt.xlabel("iterations")
+plt.ylabel("accuracy")
+plt.savefig("gender_acc_all_minus_train.png")
+plt.gcf().clear()
+
+plt.plot(range(len(loss_all_history)),loss_all_history)
+plt.xlabel("iterations")
+plt.ylabel("loss")
+plt.savefig("all_loss_minus_train.png")
+plt.gcf().clear()
+
+plt.plot(range(len(acc_all_history)),acc_all_history)
+plt.xlabel("iterations")
+plt.ylabel("accuracy")
+plt.savefig("all_acc_minus_train.png")
+plt.gcf().clear()
+
+torch.save(all_model.state_dict(), save_model_path)
+#torch.save(gender_model.state_dict(), save_gender_model_path)
+#torch.save(smile_model.state_dict(), save_smile_model_path)
+
+state_all_dict = torch.load(save_model_path)
+all_model.load_state_dict(state_all_dict)
 
 print("model saved and loaded")
 print("start validation")
