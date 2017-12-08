@@ -210,19 +210,19 @@ train_file_name="gender_fex_trset.csv"
 test_csv_path="../data/test_face/"
 test_file_name="gender_fex_valset.csv"
 #save_model_path="all_model.pkl"
-best_gender_model_path="gender_model.pkl"
-best_smile_model_path="smile_model.pkl"
+best_gender_model_path="../Vishal_tests/base/gender_model.pkl"
+best_smile_model_path="../Vishal_tests/base/smile_model.pkl"
 train_dataset = AllDataset(train_csv_path, train_file_name, dtype,"train")
 ## loader
-train_loader = DataLoader(train_dataset,batch_size=256,shuffle=True)
+train_loader = DataLoader(train_dataset,batch_size=32,shuffle=True)
 
 val_dataset = AllDataset(train_csv_path, train_file_name, dtype,"val")
 ## loader
-val_loader = DataLoader(val_dataset,batch_size=256,shuffle=True)
+val_loader = DataLoader(val_dataset,batch_size=32,shuffle=True)
 
 test_dataset = AllDataset(test_csv_path, test_file_name, dtype,"test")
 ## loader
-test_loader = DataLoader(test_dataset,batch_size=256,shuffle=True)
+test_loader = DataLoader(test_dataset,batch_size=32,shuffle=True)
 print("loaded data")
 
 
@@ -241,7 +241,7 @@ for t, (x, y, z) in enumerate(train_loader):
 
 def pca_model(x_var,nComp,dtype):
 
-    img = x_var.data.numpy()
+    img = x_var.data.cpu().numpy()
 
     for indx in range(img.shape[0]):
         R = img[indx,0,:,:]
