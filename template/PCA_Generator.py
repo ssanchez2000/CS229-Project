@@ -210,8 +210,8 @@ train_file_name="gender_fex_trset.csv"
 test_csv_path="../data/test_face/"
 test_file_name="gender_fex_valset.csv"
 #save_model_path="all_model.pkl"
-save_gender_model_path="all_gender_model.pkl"
-save_smile_model_path="all_smile_model.pkl"
+best_gender_model_path="gender_model.pkl"
+best_smile_model_path="smile_model.pkl"
 train_dataset = AllDataset(train_csv_path, train_file_name, dtype,"train")
 ## loader
 train_loader = DataLoader(train_dataset,batch_size=256,shuffle=True)
@@ -268,6 +268,42 @@ def pca_model(x_var,nComp,dtype):
     img = torch.from_numpy(img).type(dtype)
     x_var = Variable(img.type(dtype))
     return x_var
+
+gender_temp_model=nn.Sequential(
+     nn.Conv2d(3, 16, kernel_size=3, stride=1),
+     nn.ReLU(inplace=True),
+     nn.BatchNorm2d(16),
+     nn.Conv2d(16, 16, kernel_size=3, stride=1),
+     nn.ReLU(inplace=True),
+     nn.BatchNorm2d(16),
+     nn.AdaptiveMaxPool2d(128),
+     ## 128x128
+     nn.Conv2d(16, 32, kernel_size=3, stride=1),
+     nn.ReLU(inplace=True),
+     nn.BatchNorm2d(32),
+     nn.Conv2d(32, 32, kernel_size=3, stride=1),
+     nn.ReLU(inplace=True),
+     nn.BatchNorm2d(32),
+     nn.AdaptiveMaxPool2d(64),
+     ## 64x64
+     nn.Conv2d(32, 64, kernel_size=3, stride=1),
+     nn.ReLU(inplace=True),
+     nn.BatchNorm2d(64),
+     nn.Conv2d(64, 64, kernel_size=3, stride=1),
+     nn.ReLU(inplace=True),
+     nn.BatchNorm2d(64),
+     nn.AdaptiveMaxPool2d(32),
+     Flatten())
+
+gender_temp_model = gender_temp_model.type(dtype)
+gender_temp_model.train()
+size=0
+
+for t, (x, y,z) in enumerate(train_loader):
+    x_var = Variable(x.type(dtype))
+    size=gender_temp_model(x_var).size()
+    if(t==0):
+        break
 
 gender_model = nn.Sequential(
         nn.Conv2d(3, 16, kernel_size=3, stride=1),
