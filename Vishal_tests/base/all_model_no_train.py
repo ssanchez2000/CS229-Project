@@ -132,7 +132,7 @@ def all_train(loader_train, all_model,gender_model,smile_model, loss_fn, all_opt
             y_pred = scores_gender.data.max(1)[1].cpu().numpy()
             z_pred = scores_smile.data.max(1)[1].cpu().numpy()
 
-            acc_gender = (y_var.data.cpu().numpy()==y_pred).sum()/float(y_pred.shape[0]):q
+            acc_gender = (y_var.data.cpu().numpy()==y_pred).sum()/float(y_pred.shape[0])
             
             acc_smile = (z_var.data.cpu().numpy()==z_pred).sum()/float(z_pred.shape[0])
 
