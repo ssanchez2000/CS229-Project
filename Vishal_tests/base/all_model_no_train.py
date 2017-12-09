@@ -411,7 +411,7 @@ loss_fn = nn.CrossEntropyLoss().type(dtype)
 all_optimizer = optim.Adam(all_model.parameters(), lr=5e-2)
 
 print("start training")
-loss_all_history, loss_gender_history,loss_smile_history, acc_all_history, acc_gender_history,acc_smile_history=all_train(train_loader, all_model,gender_model,smile_model, loss_fn, all_optimizer, dtype,num_epochs=15, print_every=40)
+loss_all_history, loss_gender_history,loss_smile_history, acc_all_history, acc_gender_history,acc_smile_history=all_train(train_loader, all_model,gender_model,smile_model, loss_fn, all_optimizer, dtype,num_epochs=15, print_every=20)
 
 plt.plot(range(len(loss_smile_history)),loss_smile_history)
 plt.xlabel("iterations")
