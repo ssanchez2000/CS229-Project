@@ -93,10 +93,6 @@ def train(loader_train,val_loader, model, loss_fn, optimizer, dtype,num_epochs=1
     val_acc_history=[]
     model.train()
     for i in range(num_epochs):
-        if((i+1)%10==0):
-            for param_group in optimizer.param_groups:
-               lr=param_group['lr']
-               param_group['lr'] = lr/2.0
         for t, (x, y) in enumerate(loader_train):
             x_var = Variable(x.type(dtype))
             y_var = Variable(y.type(dtype).long())
@@ -242,10 +238,10 @@ print("defined model")
 model.type(dtype)
 model.train()
 loss_fn = nn.CrossEntropyLoss().type(dtype)
-optimizer = optim.Adam(model.parameters(), lr=1e-4,weight_decay=5e-3)
+optimizer = optim.Adam(model.parameters(), lr=1e-4,weight_decay=2e-3)
 print("start training")
 
-loss_history,acc_history,val_acc_history=train(train_loader,val_loader, model, loss_fn, optimizer, dtype,num_epochs=25, print_every=10)
+loss_history,acc_history,val_acc_history=train(train_loader,val_loader, model, loss_fn, optimizer, dtype,num_epochs=15, print_every=10)
 
 plt.plot(range(len(loss_history)),loss_history)
 plt.xlabel("iterations")
