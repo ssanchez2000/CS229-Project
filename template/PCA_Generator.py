@@ -110,7 +110,7 @@ def all_train(loader_train, gender_model,smile_model, loss_fn, gender_optimizer,
             z_var = Variable(z.type(dtype).long())
             z_var=z_var.view(z_var.data.shape[0])
 
-            noise_x = pca_model(x_var, 250,dtype)
+            noise_x = pca_model(x_var, 256,dtype)
 
             scores_gender=gender_model(noise_x)
             scores_smile=smile_model(noise_x)
@@ -140,13 +140,13 @@ def all_train(loader_train, gender_model,smile_model, loss_fn, gender_optimizer,
             if (t + 1) % print_every == 0:
                 print('t = %d, loss_all = %.4f,loss_gender = %.4f,loss_smile = %.4f, acc_all = %.4f' % (t + 1, loss_all.data[0],loss_gender.data[0],loss_smile.data[0], acc_all))
 
-            gender_optimizer.zero_grad()
-            loss_gender.backward(retain_graph=True)
-            gender_optimizer.step()
+            #gender_optimizer.zero_grad()
+            #loss_gender.backward(retain_graph=True)
+            #gender_optimizer.step()
 
-            smile_optimizer.zero_grad()
-            loss_smile.backward(retain_graph=True)
-            smile_optimizer.step()
+            #smile_optimizer.zero_grad()
+            #loss_smile.backward(retain_graph=True)
+            #smile_optimizer.step()
 
     return loss_all_history, loss_gender_history,loss_smile_history, acc_all_history, acc_gender_history,acc_smile_history
 
