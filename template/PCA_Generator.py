@@ -421,12 +421,12 @@ plt.ylabel("accuracy")
 plt.savefig("all_acc_minus_train.png")
 plt.gcf().clear()
 
-torch.save(all_model.state_dict(), save_model_path)
+#torch.save(all_model.state_dict(), save_model_path)
 #torch.save(gender_model.state_dict(), save_gender_model_path)
 #torch.save(smile_model.state_dict(), save_smile_model_path)
 
-state_all_dict = torch.load(save_model_path)
-all_model.load_state_dict(state_all_dict)
+#state_all_dict = torch.load(save_model_path)
+#all_model.load_state_dict(state_all_dict)
 
 print("model saved and loaded")
 print("start validation")
