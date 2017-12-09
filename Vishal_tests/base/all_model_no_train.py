@@ -132,18 +132,19 @@ def all_train(loader_train, all_model,gender_model,smile_model, loss_fn, all_opt
             y_pred = scores_gender.data.max(1)[1].cpu().numpy()
             z_pred = scores_smile.data.max(1)[1].cpu().numpy()
 
-            acc_gender = (y_var.data.cpu().numpy()==y_pred).sum()/float(y_pred.shape[0])
-            acc_gender_history.append(acc_gender)
-
+            acc_gender = (y_var.data.cpu().numpy()==y_pred).sum()/float(y_pred.shape[0]):q
+            
             acc_smile = (z_var.data.cpu().numpy()==z_pred).sum()/float(z_pred.shape[0])
-            acc_smile_history.append(acc_smile)
 
             y_bool=(y_var.data.cpu().numpy()!=y_pred)
             z_bool=(z_var.data.cpu().numpy()==z_pred)
             acc_all=np.multiply(y_bool,z_bool).sum()/float(y_bool.shape[0])
-            acc_all_history.append(acc_all)
+
             if (t + 1) % print_every == 0:
                 print('t = %d, loss_all = %.4f,loss_gender = %.4f,loss_smile = %.4f, acc_all = %.4f' % (t + 1, loss_all.data[0],loss_gender.data[0],loss_smile.data[0], acc_all))
+                acc_gender_history.append(acc_gender)
+                acc_smile_history.append(acc_smile)
+                acc_all_history.append(acc_all)
 
             all_optimizer.zero_grad()
             loss_all.backward()
