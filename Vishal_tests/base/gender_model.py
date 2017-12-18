@@ -13,6 +13,8 @@ from sklearn.model_selection import train_test_split
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+from ModelArchitectures import *
+
 class GenderDataset(Dataset):
 
     def __init__(self,csv_path,file_name,dtype,mode):
@@ -162,31 +164,7 @@ test_dataset = GenderDataset(test_csv_path, test_file_name, dtype,"test")
 test_loader = DataLoader(test_dataset,batch_size=64,shuffle=True)
 print("loaded data")
 
-temp_model=nn.Sequential(
-    nn.Conv2d(3, 16, kernel_size=3, stride=1),
-    nn.ReLU(inplace=True),
-    nn.BatchNorm2d(16),
-    nn.Conv2d(16, 16, kernel_size=3, stride=1),
-    nn.ReLU(inplace=True),
-    nn.BatchNorm2d(16),
-    nn.AdaptiveMaxPool2d(128),
-    ## 128x128
-    nn.Conv2d(16, 32, kernel_size=3, stride=1),
-    nn.ReLU(inplace=True),
-    nn.BatchNorm2d(32),
-    nn.Conv2d(32, 32, kernel_size=3, stride=1),
-    nn.ReLU(inplace=True),
-    nn.BatchNorm2d(32),
-    nn.AdaptiveMaxPool2d(64),
-    ## 64x64
-    nn.Conv2d(32, 64, kernel_size=3, stride=1),
-    nn.ReLU(inplace=True),
-    nn.BatchNorm2d(64),
-    nn.Conv2d(64, 64, kernel_size=3, stride=1),
-    nn.ReLU(inplace=True),
-    nn.BatchNorm2d(64),
-    nn.AdaptiveMaxPool2d(32),
-    Flatten())
+temp_model=temp_gender()
 
 temp_model = temp_model.type(dtype)
 temp_model.train()
@@ -198,37 +176,7 @@ for t, (x, y) in enumerate(train_loader):
     if(t==0):
         break
 
-model = nn.Sequential(
-    nn.Conv2d(3, 16, kernel_size=3, stride=1),
-    nn.ReLU(inplace=True),
-    nn.BatchNorm2d(16),
-    nn.Conv2d(16, 16, kernel_size=3, stride=1),
-    nn.ReLU(inplace=True),
-    nn.BatchNorm2d(16),
-    nn.AdaptiveMaxPool2d(128),
-    ## 128x128
-    nn.Conv2d(16, 32, kernel_size=3, stride=1),
-    nn.ReLU(inplace=True),
-    nn.BatchNorm2d(32),
-    nn.Conv2d(32, 32, kernel_size=3, stride=1),
-    nn.ReLU(inplace=True),
-    nn.BatchNorm2d(32),
-    nn.AdaptiveMaxPool2d(64),
-    ## 64x64
-    nn.Conv2d(32, 64, kernel_size=3, stride=1),
-    nn.ReLU(inplace=True),
-    nn.BatchNorm2d(64),
-    nn.Conv2d(64, 64, kernel_size=3, stride=1),
-    nn.ReLU(inplace=True),
-    nn.BatchNorm2d(64),
-    nn.AdaptiveMaxPool2d(32),
-    Flatten(),
-    nn.Linear(size[1], 4096),
-    nn.ReLU(inplace=True),
-    nn.Linear(4096,1024),
-    nn.ReLU(inplace=True),
-    nn.Linear(1024,2),
-    nn.Softmax())
+model = gender_model(size)
 print("defined model")
 
 model.type(dtype)
@@ -237,7 +185,7 @@ loss_fn = nn.CrossEntropyLoss().type(dtype)
 optimizer = optim.Adam(model.parameters(), lr=1e-4,weight_decay=2e-3)
 print("start training")
 
-loss_history,acc_history,val_acc_history=train(train_loader,val_loader, model, loss_fn, optimizer, dtype,num_epochs=15, print_every=10)
+loss_history,acc_history,val_acc_history=train(train_loader,val_loader, model, loss_fn, optimizer, dtype,num_epochs=15, print_every=1)
 
 plt.plot(range(len(loss_history)),loss_history)
 plt.xlabel("iterations")
