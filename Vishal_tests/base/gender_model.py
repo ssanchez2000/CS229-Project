@@ -101,8 +101,8 @@ def train(loader_train,val_loader, model, loss_fn, optimizer, dtype,num_epochs=1
             loss = loss_fn(scores, y_var)
             loss_history.append(loss.data[0])
 
-            y_pred = scores.data.max(1)[1].cpu().numpy()
-            acc = (y_var.data.cpu().numpy()==y_pred).sum()/float(y_pred.shape[0])
+            y_pred = scores.data.max(1)[1]
+            acc = (y_var.data==y_pred).sum()/float(y_pred.shape[0])
             acc_history.append(acc)
 
             if (t + 1) % print_every == 0:
@@ -126,11 +126,8 @@ def validate_epoch(model, loader, dtype):
     `dtype` data type for variables
         eg torch.FloatTensor (cpu) or torch.cuda.FloatTensor (gpu)
     """
-    n_samples = len(loader.sampler)
-    x, y = loader.dataset[0]
-    y_array = np.zeros((n_samples))
-    y_pred_array = np.zeros((n_samples))
-    bs = loader.batch_size
+    y_pred_array_shape = 0
+    total_accurate = 0
     ## Put the model in test mode
     model.eval()
     for i, (x, y) in enumerate(loader):
@@ -138,12 +135,11 @@ def validate_epoch(model, loader, dtype):
         y_var = Variable(y.type(dtype).long())
         y_var=y_var.view(y_var.data.shape[0])
         scores = model(x_var)
-        y_pred = scores.data.max(1)[1].cpu().numpy()
+        y_pred = scores.data.max(1)[1]
+        total_accurate += (y_var.data == y_pred).sum()
+        y_pred_array_shape += float(y_pred.shape[0])
 
-        y_array[i*bs:(i+1)*bs] = y_var.data.cpu().numpy()
-        y_pred_array[i*bs:(i+1)*bs] = y_pred
-
-    return (y_array==y_pred_array).sum()/float(y_pred_array.shape[0])
+    return total_accurate/float(y_pred_array_shape)
 
 dtype = torch.cuda.FloatTensor
 
