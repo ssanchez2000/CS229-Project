@@ -69,12 +69,6 @@ class SmileDataset(Dataset):
             return self.T
 
 
-class Flatten(nn.Module):
-    def forward(self, x):
-        N, C, H, W = x.size() # read in N, C, H, W
-        return x.view(N, -1)
-
-
 def train(loader_train,val_loader, model, loss_fn, optimizer, dtype,num_epochs=1, print_every=20):
     """
     train `model` on data from `loader_train` for one epoch

@@ -72,18 +72,6 @@ class AllDataset(Dataset):
         if(self.mode=="test"):
             return self.T
 
-class Flatten(nn.Module):
-    def forward(self, x):
-        N, C, H, W = x.size() # read in N, C, H, W
-        return x.view(N, -1)
-
-class Unflatten(nn.Module):
-    def forward(self, x):
-        C=3
-        H=256
-        W=256
-        N,M = x.size() # read in N, C* H* W
-        return x.view(N,C,H,W)
 
 def all_train(loader_train, all_model,gender_model,smile_model, loss_fn, all_optimizer,gender_optimizer,smile_optimizer dtype,num_epochs=1, print_every=10):
     """
@@ -103,6 +91,10 @@ def all_train(loader_train, all_model,gender_model,smile_model, loss_fn, all_opt
     loss_smile_history = []
     acc_all_history = []
     loss_all_history = []
+    for param in gender_model.params():
+        param.requires_grad = True
+    for param in gender_model.params():
+        param.requires_grad = True
     gender_model.train()
     smile_model.train()
     for i in range(num_epochs):
@@ -146,6 +138,14 @@ def all_train(loader_train, all_model,gender_model,smile_model, loss_fn, all_opt
             smile_optimizer.step()
 
     all_model.train()
+    # This should lock the weights for the static classifiers
+    # and eliminate the need to calculate the backprop through them
+    for param in gender_model.params():
+        param.requires_grad = False
+    for param in gender_model.params():
+        param.requires_grad = False
+    # eval effects how normalization acts wehn we are just
+    # evaluating the model
     gender_model.eval()
     smile_model.eval()
     for i in range(num_epochs):

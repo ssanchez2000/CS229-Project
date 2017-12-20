@@ -72,19 +72,6 @@ class AllDataset(Dataset):
         if(self.mode=="test"):
             return self.T
 
-class Flatten(nn.Module):
-    def forward(self, x):
-        N, C, H, W = x.size() # read in N, C, H, W
-        return x.view(N, -1)
-
-class Unflatten(nn.Module):
-    def forward(self, x):
-        C=3
-        H=256
-        W=256
-        N,M = x.size() # read in N, C* H* W
-        return x.view(N,C,H,W)
-
 def all_train(loader_train, all_model,gender_model,smile_model, loss_fn, all_optimizer, dtype,num_epochs=1, print_every=10):
     """
     train `model` on data from `loader_train` for one epoch
@@ -105,12 +92,22 @@ def all_train(loader_train, all_model,gender_model,smile_model, loss_fn, all_opt
     loss_all_history = []
 
     all_model.train()
+    # This should lock the weights for the static classifiers
+    # and eliminate the need to calculate the backprop through them
+    for param in gender_model.params():
+        param.requires_grad=False
+    for param in gender_model.params():
+        param.requires_grad=False
+    # eval effects how normalization acts wehn we are just
+    # evaluating the model
     gender_model.eval()
     smile_model.eval()
     for i in range(num_epochs):
         for t, (x,y,z) in enumerate(loader_train):
             x_var = Variable(x.type(dtype))
 
+            #consider negating the labels of y
+            #then the losses are additive
             y_var = Variable(y.type(dtype).long())
             y_var=y_var.view(y_var.data.shape[0])
 
@@ -121,9 +118,9 @@ def all_train(loader_train, all_model,gender_model,smile_model, loss_fn, all_opt
             scores_gender=gender_model(noise_x)
             scores_smile=smile_model(noise_x)
 
-            loss_gender = loss_fn(scores_gender, ~y_var)
+            loss_gender = loss_fn(scores_gender, y_var)
             loss_smile = loss_fn(scores_smile, z_var)
-            loss_all=loss_smile+loss_gender
+            loss_all=loss_smile-loss_gender
 
             y_pred = scores_gender.data.max(1)[1]
             z_pred = scores_smile.data.max(1)[1]
