@@ -6,6 +6,7 @@ from torchvision import transforms
 import torch.nn as nn
 import torch.optim as optim
 from torch.autograd import Variable
+from torch.backends import cudnn
 import numpy
 from PIL import Image
 import pandas as pd
@@ -53,12 +54,13 @@ class SmileDataset(Dataset):
             img=torch.from_numpy(img).type(self.dtype)
             return img,label
 
-        if(self.mode=="test"):
-            label=torch.from_numpy(self.labels_test[index]).type(self.dtype)
-            img_name=self.img_names_test[index]
-            img=np.array(Image.open(self.csv_path+img_name)).T
-            img=torch.from_numpy(img).type(self.dtype)
-            return img,label
+        if (self.mode == "test"):
+            label = torch.from_numpy(self.labels_test[index]).type(self.dtype)
+            img_name = self.img_names_test[index]
+            img = Image.open(self.csv_path + img_name[0])
+            img = np.array(img).T
+            img = torch.from_numpy(img).type(self.dtype)
+            return img, label
 
     def __len__(self):
         if(self.mode=="train"):
@@ -128,16 +130,17 @@ def validate_epoch(model, loader, dtype):
     model.eval()
     for i, (x, y) in enumerate(loader):
         x_var = Variable(x.type(dtype), volatile=True)
-        y_var = Variable(y.type(dtype).long())
+        y_var = Variable(y.type(dtype).long(), volatile=True)
         y_var=y_var.view(y_var.data.shape[0])
         scores = model(x_var)
         y_pred = scores.data.max(1)[1]
-        total_accurate += (y_var.data == y_pred).sum()
+        total_accurate += (y_var.data == y_pred).double().sum()
         y_pred_array_shape += float(y_pred.shape[0])
 
     return total_accurate/float(y_pred_array_shape)
 
 dtype = torch.cuda.FloatTensor
+cudnn.benchmark=True
 train_csv_path = '../../data/train_face/'
 train_file_name="gender_fex_trset.csv"
 test_csv_path="../../data/test_face/"

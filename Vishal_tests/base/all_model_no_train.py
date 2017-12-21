@@ -6,6 +6,7 @@ from torchvision import transforms
 import torch.nn as nn
 import torch.optim as optim
 from torch.autograd import Variable
+from torch.backends import cudnn
 import numpy
 from PIL import Image
 import pandas as pd
@@ -125,13 +126,13 @@ def all_train(loader_train, all_model,gender_model,smile_model, loss_fn, all_opt
             y_pred = scores_gender.data.max(1)[1]
             z_pred = scores_smile.data.max(1)[1]
 
-            acc_gender = (y_var.data==y_pred).sum()/float(y_pred.shape[0])
+            acc_gender = (y_var.data==y_pred).double().sum()/float(y_pred.shape[0])
 
-            acc_smile = (z_var.data==z_pred).sum()/float(z_pred.shape[0])
+            acc_smile = (z_var.data==z_pred).double().sum()/float(z_pred.shape[0])
 
             y_bool=(y_var.data!=y_pred)
             z_bool=(z_var.data==z_pred)
-            acc_all=(y_bool & z_bool).sum()/float(y_bool.shape[0])
+            acc_all=(y_bool & z_bool).double().sum()/float(y_bool.shape[0])
 
             if (t + 1) % print_every == 0:
                 print('t = %d, loss_all = %.4f,loss_gender = %.4f,loss_smile = %.4f, acc_all = %.4f' % (t + 1, loss_all.data[0],loss_gender.data[0],loss_smile.data[0], acc_all))
@@ -183,9 +184,9 @@ def validate(all_model,gender_model,smile_model, loader, dtype):
         y_pred = scores_gender.data.max(1)[1]
         z_pred = scores_smile.data.max(1)[1]
 
-        y_total += (y_var.data==y_pred).sum()
-        z_total += (z_var.data == z_pred).sum()
-        total += ((y_var.data!=y_pred)&(z_var.data==z_pred)).sum()
+        y_total += (y_var.data==y_pred).double().sum()
+        z_total += (z_var.data == z_pred).double().sum()
+        total += ((y_var.data!=y_pred)&(z_var.data==z_pred)).double().sum()
         pred_array_shape += y_pred.shape[0]
 
     acc_gender = y_total/float(pred_array_shape)
@@ -196,6 +197,7 @@ def validate(all_model,gender_model,smile_model, loader, dtype):
     return acc_all,acc_gender,acc_smile
 
 dtype = torch.cuda.FloatTensor
+cudnn.benchmark=True
 train_csv_path = '../../data/train_face/'
 train_file_name="gender_fex_trset.csv"
 test_csv_path="../../data/test_face/"

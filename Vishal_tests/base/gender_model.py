@@ -6,6 +6,7 @@ from torchvision import transforms
 import torch.nn as nn
 import torch.optim as optim
 from torch.autograd import Variable
+from torch.backends import cudnn
 import numpy
 from PIL import Image
 import pandas as pd
@@ -99,7 +100,7 @@ def train(loader_train,val_loader, model, loss_fn, optimizer, dtype,num_epochs=1
             loss_history.append(loss.data[0])
 
             y_pred = scores.data.max(1)[1]
-            acc = (y_var.data==y_pred).sum()/float(y_pred.shape[0])
+            acc = (y_var.data==y_pred).double().sum()/float(y_pred.shape[0])
             acc_history.append(acc)
 
             if (t + 1) % print_every == 0:
@@ -129,16 +130,17 @@ def validate_epoch(model, loader, dtype):
     model.eval()
     for i, (x, y) in enumerate(loader):
         x_var = Variable(x.type(dtype), volatile=True)
-        y_var = Variable(y.type(dtype).long())
+        y_var = Variable(y.type(dtype).long(), volatile=True)
         y_var=y_var.view(y_var.data.shape[0])
         scores = model(x_var)
         y_pred = scores.data.max(1)[1]
-        total_accurate += (y_var.data == y_pred).sum()
+        total_accurate += (y_var.data == y_pred).double().sum()
         y_pred_array_shape += float(y_pred.shape[0])
 
     return total_accurate/float(y_pred_array_shape)
 
 dtype = torch.cuda.FloatTensor
+cudnn.benchmark=True
 
 train_csv_path = '../../data/train_face/'
 train_file_name="gender_fex_trset.csv"
