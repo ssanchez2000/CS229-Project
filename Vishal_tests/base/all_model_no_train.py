@@ -97,7 +97,7 @@ def all_train(loader_train, all_model,gender_model,smile_model, loss_fn, all_opt
     # and eliminate the need to calculate the backprop through them
     for param in gender_model.params():
         param.requires_grad=False
-    for param in gender_model.params():
+    for param in smile_model.params():
         param.requires_grad=False
     # eval effects how normalization acts wehn we are just
     # evaluating the model
