@@ -182,7 +182,7 @@ loss_fn = nn.CrossEntropyLoss().type(dtype)
 optimizer = optim.Adam(model.parameters(), lr=1e-4,weight_decay=2e-3)
 print("start training")
 
-loss_history,acc_history,val_acc_history=train(train_loader,val_loader, model, loss_fn, optimizer, dtype,num_epochs=15, print_every=1)
+loss_history,acc_history,val_acc_history=train(train_loader,val_loader, model, loss_fn, optimizer, dtype,num_epochs=15, print_every=40)
 
 plt.plot(range(len(loss_history)),loss_history)
 plt.xlabel("iterations")

@@ -95,9 +95,9 @@ def all_train(loader_train, all_model,gender_model,smile_model, loss_fn, all_opt
     all_model.train()
     # This should lock the weights for the static classifiers
     # and eliminate the need to calculate the backprop through them
-    for param in gender_model.params():
+    for param in gender_model.parameters():
         param.requires_grad=False
-    for param in smile_model.params():
+    for param in smile_model.parameters():
         param.requires_grad=False
     # eval effects how normalization acts wehn we are just
     # evaluating the model
@@ -160,7 +160,7 @@ def validate(all_model,gender_model,smile_model, loader, dtype):
     `dtype` data type for variables
         eg torch.FloatTensor (cpu) or torch.cuda.FloatTensor (gpu)
     """
-     y_total = 0
+    y_total = 0
     z_total = 0
     total = 0
     pred_array_shape =0
