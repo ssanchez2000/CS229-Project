@@ -95,7 +95,12 @@ def all_train(loader_train, all_model,gender_model,smile_model, loss_fn, all_opt
     loss_all_history = []
 
     all_model.train()
-
+    for param in gender_model.params():
+        param.requires_grad=False
+    for param in smile_model.params():
+        param.requires_grad=False
+    gender_model.eval()
+    smile_model.eval()
     for i in range(num_epochs):
         for t, (x,y,z) in enumerate(loader_train):
             x_var = Variable(x.type(dtype))
